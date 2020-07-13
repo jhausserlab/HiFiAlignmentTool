@@ -36,7 +36,7 @@ def read(czi):
 
     data.append(normed_mosaic_data)
 
-  return np.array(data)
+  return data
 
 def get_processed_czis(czis):
   processed_czis = []
@@ -44,14 +44,7 @@ def get_processed_czis(czis):
   for czi in czis:
     processed_czis.append(read(czi))
 
-  # read(czi, channel)
-  # result = pool.map(lambda x: , channels)
-  # result = map(lambda x: read(czi, x), channels)
-  pp.pprint(len(processed_czis))
-  # pp.pprint(processed_czis)
-  n = np.array([processed_czis])
-  pp.pprint(np.size(n))
-  return n
+  return processed_czis
 
 def get_czis(files):
   czis = []
@@ -68,24 +61,14 @@ def toType(x):
 
 def images(files):
   czis = get_czis(files)
-  # print(len(czis))
   processed_czis = get_processed_czis(czis)
-  # print('len', processed_czis)
   print('np.shape', np.shape(processed_czis))
   print('type', type(processed_czis))
-  # test = list(channels)
 
-  # print(test[0][0])
   with napari.gui_qt():
     viewer = napari.Viewer()
     for czi in processed_czis:
       print('np.shape', np.shape(czi))
-      print('np.shape', np.shape(czi[0]))
-
-      # vecToType = np.vectorize(toType)
-      # t = vecToType(czi)
-      # print('np.shape 4', np.shape(t))
-      # viewer.add_image(t[0])
-      viewer.add_image(czi[0])
+      viewer.add_image(np.array(czi))
     # viewer = napari.view_image(processed_czis[0][0].astype(np.uint8))
     # print("display_with_napari", time.process_time() - display_with_napari)
