@@ -1,12 +1,14 @@
 import os
 import glob
-import image_processing.process
+from image_processing.process import images
 
-def get_file_names(source):
-  return '\n'.join(glob.glob(source + '/**/*.czi', recursive=True))
+def get_files(source):
+  return glob.glob(source + '/**/*.czi', recursive=True)
 
-def list_files(source):
-  msg = f'''Found the following image files in {source}: \n\n{get_file_names(source)}'''
+def list_files(source, files):
+  file_names = '\n'.join(files)
+  msg = f'''Found the following image files in {source}: \n\n{file_names}\n'''
+
   print(msg)
 
 def ask_for_approval():
@@ -25,9 +27,11 @@ def ask_for_approval():
 
 def run(args):
   source = args.source
+  files = get_files(source)
 
-  list_files(source)
-  # ask_for_approval()
-  process.images(source)
+  list_files(source, files)
 
+  if not args.yes:
+    ask_for_approval()
 
+  images(files)
