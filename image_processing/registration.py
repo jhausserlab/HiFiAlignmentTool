@@ -9,7 +9,7 @@ from scipy.ndimage import shift
 ## align images based on the first dapi provided
 ##
 ## register_translation, is fast
-def align_images(processed_czis):
+def align_images(args, processed_czis):
   aligned_images = []
 
   for czi in processed_czis:

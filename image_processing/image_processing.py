@@ -1,17 +1,18 @@
-import os
 import glob
-from image_processing.process import get_images
 import numpy as np
-import tifffile
+import time
+from datetime import timedelta
+from image_processing.czi import show, write
+from image_processing.process import get_images
 
 def get_files(source):
   return glob.glob(source + '/**/*.czi', recursive=True)
 
 def list_files(source, files):
   file_names = '\n'.join(files)
-  msg = f'''Found the following image files in {source}: \n\n{file_names}\n'''
+  file_list = f'''Found the following image files in {source}: \n\n{file_names}\n'''
 
-  print(msg)
+  print(file_list)
 
 def ask_for_approval():
   hasApproval = False
@@ -28,15 +29,7 @@ def ask_for_approval():
       print('Please enter a valid option.')
 
 def run(args):
-
-  # if args.destination:
-  #   print('d', args.destination)
-  #   if os.path.exists(args.destination):
-  #     print('has  path')
-  #     try:
-  #       print(os.path.basename(args.destination))
-  #     except:
-  #       print('no base')
+  if args.time: run_time = time.monotonic()
 
   source = args.source
   files = get_files(source)
@@ -46,26 +39,12 @@ def run(args):
   if not args.yes:
     ask_for_approval()
 
-  images = get_images(files)
+  images = get_images(args, files)
 
   print('np.shape', np.shape(images))
   print('type', type(images))
-  # print('all', images)
 
-  # show(args, images)
-      # viewer = napari.view_image(images[0][0].astype(np.uint8))
+  show(args, images)
+  write(args, images)
 
-  if args.destination:
-    # print('d', args.destination)
-    if os.path.exists(args.destination):
-      # print('has  path')
-      # try:
-        # print(os.path.basename(args.destination))
-      file =  f'{os.path.basename(args.destination)}/{"test.ome.tif"}'
-      # file =  '/Users/fredrik/Dropbox/_projects/_praktik/_dev/test_aicsimageio/images/temp.ome.tiff'
-      with tifffile.TiffWriter(file) as tif:
-          # tif.save(images, metadata={'axes':'TZCYX'})
-          tif.save(np.array(images), metadata={'axes':'TZCYX'})
-      # except:
-        # print('files save failed')
-
+  if args.time: print(timedelta(seconds=time.monotonic() - run_time))
