@@ -44,6 +44,7 @@ def run(args):
   print('np.shape', np.shape(images))
   print('type', type(images))
 
+  # show in napaari
   show(args, images)
   # write(args, images)
 
