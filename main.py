@@ -28,6 +28,20 @@ parser.add_argument(
   default=False,
   help='generate image without asking any questions'
 )
+parser.add_argument(
+  '--disable-registration',
+  action='store_const',
+  const=True,
+  default=False,
+  help='disable image registration'
+)
+parser.add_argument(
+  '--disable-subtract-background',
+  action='store_const',
+  const=True,
+  default=False,
+  help='disable image registration'
+)
 
 args = parser.parse_args()
 

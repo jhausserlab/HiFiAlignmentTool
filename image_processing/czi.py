@@ -42,18 +42,24 @@ def read(args, czi):
     if args.time: read_time_total += time.monotonic() - read_time
     # add option for not subtracting background,
     # normed_mosaic_data = mosaic[0, 0, :, :]
-    # normed_mosaic_data = norm_by(mosaic[0, 0, :, :], 5, 98) * 255
+
     if args.time: subtract_background_time = time.monotonic()
-    normed_mosaic_data = subtract_background(mosaic[0, 0, :, :])
+    if not args.disable_subtract_background:
+      normed_mosaic_data = subtract_background(mosaic[0, 0, :, :])
+      data.append(normed_mosaic_data)
+    else:
+      print('info – use norm_by instead of subtract_background')
+      normed_mosaic_data = norm_by(mosaic[0, 0, :, :], 5, 98) * 255
+      data.append(normed_mosaic_data)
     if args.time: subtract_background_time_total += time.monotonic() - subtract_background_time
 
-    data.append(normed_mosaic_data)
     print(f'''info – channel {channel} read, and background subtracted''')
 
   if args.time:
     print('info – czi.read_mosaic time', timedelta(seconds=read_time_total))
     print('info – subtract_background time', timedelta(seconds=subtract_background_time_total))
 
+  print('data', data)
   return data
 
 def get_processed_czis(args, czis):
@@ -82,7 +88,13 @@ def show(args, images):
       for czi in images:
         viewer.add_image(np.array(czi))
 
-def write(args, images):
+def write(args, imagesToShape):
+  shape = np.shape(imagesToShape)
+  newShape = shape[0] * shape[1]
+
+  images = np.array(imagesToShape).reshape(1, newShape, shape[2], shape[3])
+
+  print('np.array(images).flatten()', np.shape(images))
   if args.destination:
     if os.path.exists(args.destination):
       name = f'{datetime.now().strftime("%Y-%m-%d")}_{int(datetime.now(tz=timezone.utc).timestamp() * 1000)}'
@@ -93,6 +105,7 @@ def write(args, images):
         # additional metadata can be added, and in a more compatible format
         # axes is just an (incorrect) example
         # https://stackoverflow.com/questions/20529187/what-is-the-best-way-to-save-image-metadata-alongside-a-tif
-        tif.save(np.array(images), metadata={'axes':'TZCYX'})
+        # for image in images:
+        tif.save(images, metadata={'axes':'TZCYX'})
     else:
       print('destination path does not exist')

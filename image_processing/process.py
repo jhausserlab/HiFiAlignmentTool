@@ -7,12 +7,22 @@ from datetime import timedelta
 # def toType(x):
 #   return x.astype(np.uint8)
 
+def get_registration(args, processed_czis):
+  if args.disable_registration:
+    return processed_czis
+  else:
+    return align_images(args, processed_czis)
+
+
 def get_images(args, files):
   czis = get_czis(files)
   processed_czis = get_processed_czis(args, czis)
+  print('processed_czis', np.shape(processed_czis))
 
   if args.time: aligned_images_time = time.monotonic()
-  aligned_images = align_images(args, processed_czis)
+  aligned_images = get_registration(args, processed_czis)
   if args.time: print('info – image registration', timedelta(seconds=time.monotonic() - aligned_images_time))
+
+  print('aligned_images', np.shape(aligned_images))
 
   return aligned_images
