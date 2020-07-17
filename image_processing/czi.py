@@ -48,7 +48,7 @@ def read(args, czi):
       normed_mosaic_data = subtract_background(mosaic[0, 0, :, :])
       data.append(normed_mosaic_data)
     else:
-      print('info – use norm_by instead of subtract_background')
+      # print('info – use norm_by instead of subtract_background')
       normed_mosaic_data = norm_by(mosaic[0, 0, :, :], 5, 98) * 255
       data.append(normed_mosaic_data)
     if args.time: subtract_background_time_total += time.monotonic() - subtract_background_time
@@ -59,7 +59,7 @@ def read(args, czi):
     print('info – czi.read_mosaic time', timedelta(seconds=read_time_total))
     print('info – subtract_background time', timedelta(seconds=subtract_background_time_total))
 
-  print('data', data)
+  # print('data', data)
   return data
 
 def get_processed_czis(args, czis):

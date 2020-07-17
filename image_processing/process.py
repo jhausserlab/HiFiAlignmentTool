@@ -17,12 +17,12 @@ def get_registration(args, processed_czis):
 def get_images(args, files):
   czis = get_czis(files)
   processed_czis = get_processed_czis(args, czis)
-  print('processed_czis', np.shape(processed_czis))
+  # print('processed_czis', np.shape(processed_czis))
 
   if args.time: aligned_images_time = time.monotonic()
   aligned_images = get_registration(args, processed_czis)
   if args.time: print('info – image registration', timedelta(seconds=time.monotonic() - aligned_images_time))
 
-  print('aligned_images', np.shape(aligned_images))
+  # print('aligned_images', np.shape(aligned_images))
 
   return aligned_images

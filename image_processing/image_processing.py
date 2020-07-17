@@ -45,6 +45,6 @@ def run(args):
   print('type', type(images))
 
   show(args, images)
-  write(args, images)
+  # write(args, images)
 
   if args.time: print(timedelta(seconds=time.monotonic() - run_time))
