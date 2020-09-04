@@ -29,6 +29,8 @@ def ask_for_approval():
       print('Please enter a valid option.')
 
 def run(args):
+  # gets the files and then gets the processed aligned images (through get_images) after shows through napari 
+  # and finally saves a tif
   if args.time: run_time = time.monotonic()
 
   source = args.source
@@ -41,11 +43,10 @@ def run(args):
 
   images = get_images(args, files)
 
-  print('np.shape', np.shape(images))
-  print('type', type(images))
+  print('np.shape of images', np.shape(images))
 
   # show in napaari
   show(args, images)
-  # write(args, images)
+  write(args, images)
 
   if args.time: print(timedelta(seconds=time.monotonic() - run_time))

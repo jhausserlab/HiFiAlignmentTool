@@ -1,4 +1,4 @@
-import cv2
+#import cv2
 import numpy as np
 from skimage import data, io
 from skimage.feature import register_translation
@@ -6,14 +6,18 @@ from skimage.feature.register_translation import _upsampled_dft
 from scipy.ndimage import fourier_shift
 from scipy.ndimage import shift
 
+
+## need to open images in this function one after the other to align instead ...
+##... of having them all called into this function (to free memory)
+
 ## align images based on the first dapi provided
-##
+## 
 ## register_translation, is fast
 def align_images(args, processed_czis):
   aligned_images = []
 
   for czi in processed_czis:
-    print('len a', len(aligned_images))
+    #print('length of a', len(aligned_images))
 
     if len(aligned_images):
       dapi_target = aligned_images[0][-1]
@@ -27,7 +31,7 @@ def align_images(args, processed_czis):
       alignedCzi = []
 
       for image_from_channel in czi:
-        print('channel size', np.shape(image_from_channel))
+        #print('channel size', np.shape(image_from_channel))
 
         corrected_image = shift(image_from_channel, shift=(shifted[0], shifted[1]), mode='constant')
 
@@ -38,5 +42,6 @@ def align_images(args, processed_czis):
 
     else:
       aligned_images.append(czi)
-
+      
+  print('In aligned_images shape is: ', np.shape(aligned_images))
   return aligned_images

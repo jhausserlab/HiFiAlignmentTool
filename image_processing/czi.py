@@ -23,6 +23,7 @@ def norm_by(x, min_, max_):
 #   pp.pprint(mosaic_size)
 
 def read(args, czi):
+  #reads the czi images and does background subtraction or normalization on it. It returns a np.array of values.
   data = []
   dims_shape = czi.dims_shape()
 
@@ -30,8 +31,9 @@ def read(args, czi):
     raise Exception("Image lacks Channels")
 
   channels = dims_shape[0]['C'][1]
-  print('info – czi dims_shape', dims_shape)
-  print('info – ciz channels', channels)
+  print('info – czi dims_shape: ', dims_shape)
+  # M is mosaic: index of tile for compositing a scene
+  print('info – czi channels: ', channels)
 
   read_time_total = 0
   subtract_background_time_total = 0
@@ -48,29 +50,31 @@ def read(args, czi):
       normed_mosaic_data = subtract_background(mosaic[0, 0, :, :])
       data.append(normed_mosaic_data)
     else:
-      # print('info – use norm_by instead of subtract_background')
+      #print('info – use norm_by instead of subtract_background')
       normed_mosaic_data = norm_by(mosaic[0, 0, :, :], 5, 98) * 255
       data.append(normed_mosaic_data)
     if args.time: subtract_background_time_total += time.monotonic() - subtract_background_time
 
-    print(f'''info – channel {channel} read, and background subtracted''')
+    print(f'''info – channel {channel} read, and image processed''') #subtraction or normalization
 
   if args.time:
     print('info – czi.read_mosaic time', timedelta(seconds=read_time_total))
     print('info – subtract_background time', timedelta(seconds=subtract_background_time_total))
 
-  # print('data', data)
+  print('data shape ', np.shape(data))
   return data
 
 def get_processed_czis(args, czis):
+  #takes the np.array of czi and processes the array by doing background subtraction or normalization.
   processed_czis = []
 
   for czi in czis:
     processed_czis.append(read(args, czi))
-
   return processed_czis
 
 def get_czis(files):
+  # Takes the string of files and creates np.array of the czi images 
+  # WARNING: the array consists of CZI images not transformed to values yet.
   czis = []
 
   for file in files:
@@ -91,10 +95,12 @@ def show(args, images):
 def write(args, imagesToShape):
   shape = np.shape(imagesToShape)
   newShape = shape[0] * shape[1]
-
   images = np.array(imagesToShape).reshape(1, newShape, shape[2], shape[3])
+  images = np.array(imagesToShape).reshape(shape)
+  #images = np.array(imagesToShape)
+  #print(type(images))
 
-  print('np.array(images).flatten()', np.shape(images))
+  #print('np.array(images).flatten()', np.shape(images))
   if args.destination:
     if os.path.exists(args.destination):
       name = f'{datetime.now().strftime("%Y-%m-%d")}_{int(datetime.now(tz=timezone.utc).timestamp() * 1000)}'
@@ -105,7 +111,8 @@ def write(args, imagesToShape):
         # additional metadata can be added, and in a more compatible format
         # axes is just an (incorrect) example
         # https://stackoverflow.com/questions/20529187/what-is-the-best-way-to-save-image-metadata-alongside-a-tif
-        # for image in images:
-        tif.save(images, metadata={'axes':'TZCYX'})
+        #for image in images:
+        #tif.save(images, metadata={'axes':'TZCYX'}) <--- metadata does not work
+        tif.save(images)
     else:
       print('destination path does not exist')

@@ -1,7 +1,7 @@
 import os
 import argparse
 from image_processing.image_processing import run
-
+# calls the run function and enables to put different arguments to process the images.
 def dir_path(string):
   if os.path.isdir(string):
     return string
@@ -40,7 +40,7 @@ parser.add_argument(
   action='store_const',
   const=True,
   default=False,
-  help='disable image registration'
+  help='disable subtract background'
 )
 
 args = parser.parse_args()

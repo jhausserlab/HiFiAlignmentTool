@@ -7,3 +7,5 @@ def subtract_background(image, radius=50, light_bg=False):
     return black_tophat(image, str_el)
   else:
     return white_tophat(image, str_el)
+
+#source: https://forum.image.sc/t/background-subtraction-in-scikit-image/39118
