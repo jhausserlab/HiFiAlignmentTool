@@ -2,7 +2,7 @@
 import napari
 from aicsimageio import AICSImage
 
-img = AICSImage("../output/2020-09-04_1599213080153.ome.tif") #../czi/align1.czi   ../align2.czi   ../output/2020-08-27_1598554331997.ome.tif
+img = AICSImage("../output/2020-09-04_1599229915072.ome.tif") #../czi/align1.czi   ../align2.czi   ../output/2020-08-27_1598554331997.ome.tif
 channel_names = img.get_channel_names()
 
 print(len(channel_names))
