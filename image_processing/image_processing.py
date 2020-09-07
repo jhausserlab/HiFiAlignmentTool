@@ -43,10 +43,11 @@ def run(args):
 
   images = get_images(args, files)
 
-  print('np.shape of images', np.shape(images))
+  print('In RUN.py, shape of images', np.shape(images))
 
   # show in napaari
   show(args, images)
+  print('Saving image')
   write(args, images)
 
   if args.time: print(timedelta(seconds=time.monotonic() - run_time))

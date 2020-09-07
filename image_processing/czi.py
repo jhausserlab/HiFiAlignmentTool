@@ -41,6 +41,7 @@ def read(args, czi):
   for channel in range(channels):
     if args.time: read_time = time.monotonic()
     mosaic = czi.read_mosaic(C=channel, scale_factor=1)
+    print('Mosaic', channel, 'DONE')
     if args.time: read_time_total += time.monotonic() - read_time
     # add option for not subtracting background,
     # normed_mosaic_data = mosaic[0, 0, :, :]

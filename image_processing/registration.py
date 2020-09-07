@@ -2,13 +2,9 @@
 import numpy as np
 from skimage import data, io
 from skimage.feature import register_translation
-from skimage.feature.register_translation import _upsampled_dft
+#from skimage.feature.register_translation import _upsampled_dft # not needed
 from scipy.ndimage import fourier_shift
 from scipy.ndimage import shift
-
-
-## need to open images in this function one after the other to align instead ...
-##... of having them all called into this function (to free memory)
 
 ## align images based on the first dapi provided
 ## 
@@ -42,6 +38,5 @@ def align_images(args, processed_czis):
 
     else:
       aligned_images.append(czi)
-      
-  print('In aligned_images shape is: ', np.shape(aligned_images))
+
   return aligned_images
