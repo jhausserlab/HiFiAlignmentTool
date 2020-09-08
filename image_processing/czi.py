@@ -42,23 +42,20 @@ def read(args, czi):
   for channel in range(channels):
     if args.time: read_time = time.monotonic()
     mosaic = czi.read_mosaic(C=channel, scale_factor=1)
-    print('Mosaic', channel, 'DONE')
+    print('Mosaic', channel, 'DONE', np.shape(mosaic[0,0,:,:]))
     if args.time: read_time_total += time.monotonic() - read_time
 
     if args.time: subtract_background_time = time.monotonic()
     if not args.disable_subtract_background:
       #commented here to remove a local variable that isn't needed
-      #normed_mosaic_data = subtract_background(mosaic[0, 0, :, :]) #use subtract background 
-      data.append(subtract_background(mosaic[0, 0, :, :]))
+      #normed_mosaic_data =  norm_by(mosaic[0, 0, :, :], 5, 98) * 255
+      #normed_mosaic_data = subtract_background(mosaic[0, 0, :, :])
+      data.append(norm_by(mosaic[0, 0, :, :], 5, 98) * 255)
       print(f'''info – channel {channel} read, and image processed''') #subtraction or normalization
     else:
-      #commented here to remove a local variable that isn't needed
-      #normed_mosaic_data =  norm_by(mosaic[0, 0, :, :], 5, 98) * 255#or normalisation
-      data.append(norm_by(mosaic[0, 0, :, :], 5, 98) * 255)
-      print(f'''info – channel {channel} read and image normalized''') #subtraction or normalization
+      data.append(mosaic[0,0,:,:])
+      print(f'''info – channel {channel} read''')
     if args.time: subtract_background_time_total += time.monotonic() - subtract_background_time
-
-    #print(f'''info – channel {channel} read, and image processed''') #subtraction or normalization
     #help free memory with garbage collector
     del mosaic
     gc.collect()
