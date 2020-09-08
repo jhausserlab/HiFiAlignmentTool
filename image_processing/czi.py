@@ -28,14 +28,18 @@ def norm_by(x, min_, max_):
 
 def read(args, czi):
   #reads the czi images and does background subtraction or normalization on it. It returns a np.array of values.
-  data = []
-  dims_shape = czi.dims_shape()
 
-  #Debugger
-  hp = hpy()
+  #data = []
+  dims_shape = czi.dims_shape()
   #hp.setrelheal() # To start registering how memory is used
   #h = hp.heap() # Variable to use to read memory usage
   #print(h) # To see what is going on between setrelheal and the print.
+
+  #Debugger
+  hp = hpy()
+  hp.setrelheap()
+  h = hp.heap()
+  print('INITIAL SITUATION \n', h,'\n ---------------------')
 
   if not 'C' in dims_shape[0]:
     raise Exception("Image lacks Channels")
@@ -44,6 +48,11 @@ def read(args, czi):
   print('info – czi dims_shape: ', dims_shape)
   # M is mosaic: index of tile for compositing a scene
   print('info – czi channels: ', channels)
+
+  # To get the dimension of the image
+  mosaic = czi.read_mosaic(C=0, scale_factor=1)
+  data = np.zeros((channels, np.shape(np.array(mosaic))[2], np.shape(np.array(mosaic))[3]))
+  print('Created dataset of size ', np.shape(data))
 
   read_time_total = 0
   subtract_background_time_total = 0
@@ -62,8 +71,11 @@ def read(args, czi):
       data.append(norm_by(mosaic[0, 0, :, :], 5, 98) * 255)
       print(f'''info – channel {channel} read, and image processed''') #subtraction or normalization
     else:
-      data.append(mosaic[0,0,:,:])
+      #data.append(mosaic[0,0,:,:])
+      data[channel,:,:] = mosaic[0,0,:,:]
       print(f'''info – channel {channel} read''')
+      h = hp.heap()
+      print('AFTER APPEND \n', h,'\n ---------------------')
     if args.time: subtract_background_time_total += time.monotonic() - subtract_background_time
     #help free memory with garbage collector
     del mosaic
@@ -72,6 +84,9 @@ def read(args, czi):
   if args.time:
     print('info – czi.read_mosaic time', timedelta(seconds=read_time_total))
     print('info – subtract_background time', timedelta(seconds=subtract_background_time_total))
+
+  h = hp.heap()
+  print('FINAL SITUATION \n', h,'\n ---------------------','\n ---------------------')
 
   print('data shape ', np.shape(data))
   return data
