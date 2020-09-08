@@ -9,6 +9,9 @@ from datetime import timezone, datetime, timedelta
 from image_processing.subtract_background import subtract_background
 import gc
 
+from guppy import hpy
+from sys import getsizeof # To know the size of the variables in bytes
+
 def norm_by(x, min_, max_):
     norms = np.percentile(x, [min_, max_])
     i2 = np.clip((x - norms[0])/(norms[1]-norms[0]), 0, 1)
@@ -27,6 +30,12 @@ def read(args, czi):
   #reads the czi images and does background subtraction or normalization on it. It returns a np.array of values.
   data = []
   dims_shape = czi.dims_shape()
+
+  #Debugger
+  hp = hpy()
+  #hp.setrelheal() # To start registering how memory is used
+  #h = hp.heap() # Variable to use to read memory usage
+  #print(h) # To see what is going on between setrelheal and the print.
 
   if not 'C' in dims_shape[0]:
     raise Exception("Image lacks Channels")
@@ -110,7 +119,7 @@ def write(args, imagesToShape):
       extension = 'ome.tif'
       file = f'{os.path.basename(args.destination)}/{name}.{extension}'
 
-      with tifffile.TiffWriter(file) as tif:
+      with tifffile.TiffWriter(file, bigtiff = True) as tif:
         # additional metadata can be added, and in a more compatible format
         # axes is just an (incorrect) example
         # https://stackoverflow.com/questions/20529187/what-is-the-best-way-to-save-image-metadata-alongside-a-tif
