@@ -54,6 +54,7 @@ def write(args, imagesToShape):
       #extension = 'tif'
       #file = f'{os.path.basename(args.destination)}/{name}.{extension}'
       file = f'{os.path.basename(args.destination)}/{name}'
+      #Removed the ome. extension cause it didn't feel useful.
 
       with tifffile.TiffWriter(file  + '.tif', bigtiff = True) as tif:
         # additional metadata can be added, and in a more compatible format
