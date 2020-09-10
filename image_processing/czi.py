@@ -36,10 +36,10 @@ def read(args, czi):
   #print(h) # To see what is going on between setrelheal and the print.
 
   #Debugger
-  hp = hpy()
-  hp.setrelheap()
-  h = hp.heap()
-  print('INITIAL SITUATION \n', h,'\n ---------------------')
+  #hp = hpy()
+  #hp.setrelheap()
+  #h = hp.heap()
+  #print('INITIAL SITUATION \n', h,'\n ---------------------')
 
   if not 'C' in dims_shape[0]:
     raise Exception("Image lacks Channels")
@@ -48,12 +48,6 @@ def read(args, czi):
   print('info – czi dims_shape: ', dims_shape)
   # M is mosaic: index of tile for compositing a scene
   print('info – czi channels: ', channels)
-
-  # To get the dimension of the image --> Not needed as it makes me do an  extra operation. 
-  # --> created the dataset in the for loop only during first iteration.
-  #mosaic = czi.read_mosaic(C=0, scale_factor=1)
-  #data = np.zeros((channels, np.shape(np.array(mosaic))[2], np.shape(np.array(mosaic))[3]))
-  #print('Created dataset of size ', np.shape(data))
 
   read_time_total = 0
   subtract_background_time_total = 0
@@ -88,26 +82,28 @@ def read(args, czi):
     del mosaic
     gc.collect()
 
-    h = hp.heap()
-    print('AFTER Garbage collect \n', h,'\n ---------------------')
+    #h = hp.heap()
+    #print('AFTER Garbage collect \n', h,'\n ---------------------')
 
   if args.time:
     print('info – czi.read_mosaic time', timedelta(seconds=read_time_total))
     print('info – subtract_background time', timedelta(seconds=subtract_background_time_total))
 
-  h = hp.heap()
-  print('FINAL SITUATION \n', h,'\n ---------------------','\n ---------------------')
+  #h = hp.heap()
+  #print('FINAL SITUATION \n', h,'\n ---------------------','\n ---------------------')
 
-  print('data shape ', np.shape(data))
+  print('data shape ', np.shape(data), 'data type', type(data))
   return data
 
 def get_processed_czis(args, czis):
-  #takes the np.array of czi and processes the array by doing background subtraction or normalization.
-  processed_czis = []
+  # As I am now comparing 1 image after the other, we do not need to have a for loop as czis will always be 1.
+  # Because of this, this function is redundant with read. Not a big deal, but the code can be cleaner
 
-  for czi in czis:
-    processed_czis.append(read(args, czi))
-  return processed_czis
+  #processed_czis = []
+  #for czi in czis:
+  #  processed_czis = read(args, czi)
+  # processed_czis = read(args, czis[0])
+  return read(args, czis[0])
 
 def get_czis(files):
   # Takes the string of files and creates np.array of the czi images 
@@ -130,10 +126,13 @@ def show(args, images):
         viewer.add_image(np.array(czi))
 
 def write(args, imagesToShape):
-  shape = np.shape(imagesToShape)
-  newShape = shape[0] * shape[1]
-  images = np.array(imagesToShape).reshape(1, newShape, shape[2], shape[3])
-  images = np.array(imagesToShape).reshape(shape)
+
+  # Because i have np-array before, this part of code isn't needed as 
+  # it was used to get dimensions from a list and not np-array
+  #shape = np.shape(imagesToShape)
+  #newShape = shape[0] * shape[1]
+  #images = np.array(imagesToShape).reshape(1, newShape, shape[2], shape[3])
+  #images = np.array(imagesToShape).reshape(shape)
   #images = np.array(imagesToShape)
   #print(type(images))
 
@@ -150,6 +149,6 @@ def write(args, imagesToShape):
         # https://stackoverflow.com/questions/20529187/what-is-the-best-way-to-save-image-metadata-alongside-a-tif
         #for image in images:
         #tif.save(images, metadata={'axes':'TZCYX'}) <--- metadata does not work
-        tif.save(images)
+        tif.save(imagesToShape)
     else:
       print('destination path does not exist')
