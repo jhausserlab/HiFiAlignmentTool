@@ -12,15 +12,10 @@ import gc
 from guppy import hpy
 from sys import getsizeof # To know the size of the variables in bytes
 
-def norm_by(x, min_, max_):
-    norms = np.percentile(x, [min_, max_])
-    i2 = np.clip((x - norms[0])/(norms[1]-norms[0]), 0, 1)
-    return i2
-
 def read(args, czi):
   #reads the czi images and does background subtraction or normalization on it. It returns a np.array of values.
 
-  #data = []
+  data = []
   dims_shape = czi.dims_shape()
   #hp.setrelheal() # To start registering how memory is used
   #h = hp.heap() # Variable to use to read memory usage
@@ -48,9 +43,9 @@ def read(args, czi):
     mosaic = czi.read_mosaic(C=channel, scale_factor=1)
     #To create a defined size of dataset with all the information needed to do it
     # meaning channels and size of the final stitiched image
-    if channel == 0:
-      data = np.zeros((channels, np.shape(np.array(mosaic))[2], np.shape(np.array(mosaic))[3]), dtype= np.int16)
-      print('Created dataset of size ', np.shape(data))
+    #if channel == 0:
+      #data = np.zeros((channels, np.shape(np.array(mosaic))[2], np.shape(np.array(mosaic))[3]))
+      #print('Created dataset of size ', np.shape(data))
 
 
     print('Mosaic', channel, 'DONE', np.shape(mosaic[0,0,:,:]))
@@ -61,12 +56,12 @@ def read(args, czi):
       #commented here to remove a local variable that isn't needed
       #normed_mosaic_data = norm_by(mosaic[0, 0, :, :], 5, 98) * 255
       #normed_mosaic_data = subtract_background(mosaic[0, 0, :, :])
-      #data.append(norm_by(mosaic[0, 0, :, :], 5, 98) * 255)
-      data[channel,:,:] = norm_by(mosaic[0, 0, :, :], 5, 98) * 255
+      data.append(norm_by(mosaic[0, 0, :, :], 5, 98) * 255)
+      #data[channel,:,:] = norm_by(mosaic[0, 0, :, :], 5, 98) * 255
       print(f'''info – channel {channel} read, and image processed''') #subtraction or normalization
     else:
-      #data.append(mosaic[0,0,:,:])
-      data[channel,:,:] = mosaic[0,0,:,:]
+      data.append(mosaic[0,0,:,:])
+      #data[channel,:,:] = mosaic[0,0,:,:]
       print(f'''info – channel {channel} read''')
     if args.time: subtract_background_time_total += time.monotonic() - subtract_background_time
     #help free memory with garbage collector
@@ -84,7 +79,7 @@ def read(args, czi):
   #print('FINAL SITUATION \n', h,'\n ---------------------','\n ---------------------')
 
   print('data shape ', np.shape(data), 'data type', type(data))
-  return data
+  return np.array(data)
 
 def get_processed_czis(args, czis):
   # As I am now comparing 1 image after the other, we do not need to have a for loop as czis will always be 1.
@@ -93,7 +88,7 @@ def get_processed_czis(args, czis):
   #processed_czis = []
   #for czi in czis:
   #  processed_czis = read(args, czi)
-  # processed_czis = read(args, czis[0])
+  #  processed_czis = read(args, czis[0])
   return read(args, czis[0])
 
 def get_czis(files):
@@ -107,3 +102,10 @@ def get_czis(files):
   # sorting?
   # "file handling: load files in order of numerical round, not alphab sorting"
   return np.array(czis)
+
+
+#Don't need this code i think...
+  def norm_by(x, min_, max_):
+    norms = np.percentile(x, [min_, max_])
+    i2 = np.clip((x - norms[0])/(norms[1]-norms[0]), 0, 1)
+    return i2

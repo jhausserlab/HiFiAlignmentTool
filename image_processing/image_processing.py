@@ -63,26 +63,11 @@ def write(args, imagesToShape):
         #tif.save(images, metadata={'axes':'TZCYX'}) <--- metadata does not work
         tif.save(imagesToShape)
 
-      with open(f'{os.path.basename(args.destination)}/{names}' + '.txt', 'w') as f:
-        f.write(str(np.shape(imagesToShape))+'\n')
+      with open(f'{os.path.basename(args.destination)}/{names}' + '.txt', 'a') as f:
+        #Save C X Y for processing when we want to align
+        f.write(str(np.shape(imagesToShape)[0])+','+str(np.shape(imagesToShape)[1])+','+str(np.shape(imagesToShape)[2])+';\n')
     else:
       print('destination path does not exist')
-
-
-'''
-Was just below def write 
-  # Because i have np-array before, this part of code isn't needed as 
-  # it was used to get dimensions from a list and not np-array
-  #shape = np.shape(imagesToShape)
-  #newShape = shape[0] * shape[1]
-  #images = np.array(imagesToShape).reshape(1, newShape, shape[2], shape[3])
-  #images = np.array(imagesToShape).reshape(shape)
-  #images = np.array(imagesToShape)
-  #print(type(images))
-
-  #print('np.array(images).flatten()', np.shape(images))
-'''
-
 
 def run(args):
   # gets the files and then gets the processed aligned images (through get_images) after shows through napari 
@@ -99,7 +84,7 @@ def run(args):
 
   images = get_images(args, files)
 
-  print('In RUN.py, shape of images', np.shape(images))
+  print('In RUN.py, shape of images', np.shape(images), type(images))
 
   # show in napaari
   show(args, images)

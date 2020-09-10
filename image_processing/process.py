@@ -23,20 +23,20 @@ def get_images(args, files):
   #Process first image
   print('--- Processing first CZI: ', files[0].split())
   processed_czi0 = get_processed_czis(args, get_czis(files[0].split()))
-  print('Shape of first image processed is: ', np.shape(processed_czi0))
+  print('Shape of first image processed is: ', np.shape(processed_czi0), type(processed_czi0))
 
   #Register the first image as aligned image and use that as reference
-  aligned_images = np.zeros(np.shape(processed_czi0), dtype= np.int16)
+  aligned_images = processed_czi0
 
   #Putting DAPI as first image and the rest shifted by 1
-  aligned_images[0] = processed_czi0[-1]
-  aligned_images[1:np.shape(processed_czi0)[0]] = processed_czi0[:-1]
+  #aligned_images[0] = processed_czi0[-1]
+  #aligned_images[1:np.shape(processed_czi0)[0]] = processed_czi0[:-1]
 
   #process i images (i=1...R) and align them with the first image
   for file in files[1:]:
     print('--- Processing CZI i:', file.split())
     processed_czi = get_processed_czis(args,get_czis(file.split()))
-    print('Shape of processed image i is: ', np.shape(processed_czi))
+    print('Shape of processed image i is: ', np.shape(processed_czi), type(processed_czi))
     #Align image0 and i together, returning an array of [2,C,X,Y]
     aligned_img = get_registration(args, processed_czi0, processed_czi)
     #To remove the first image as it is already registered in aligned_images before the for
