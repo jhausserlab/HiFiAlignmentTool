@@ -9,8 +9,8 @@ from scipy.ndimage import shift
 ## align images based on the first dapi provided
 
 def align_images(args, processed_czi0, processed_czi):
-  #all channels - the dapi of processed_czi
-  totalChannels = np.shape(processed_czi)[0]
+  #all channels minus the dapi of processed_czi --- remove -1 to add the dapi of the channel
+  totalChannels = np.shape(processed_czi)[0] - 1
   #this will be a problem when czi have different shapes (to work on soon)
   aligned_images = []
 
