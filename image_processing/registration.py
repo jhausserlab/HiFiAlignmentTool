@@ -1,9 +1,7 @@
-#import cv2
 import numpy as np
 from skimage import data, io
-from skimage.feature import register_translation
-#from skimage.feature.register_translation import _upsampled_dft # not needed
-from scipy.ndimage import fourier_shift
+#from skimage.feature import register_translation # OUTDATED 
+from skimage.registration import phase_cross_correlation # new form of register_translation
 from scipy.ndimage import shift
 
 ## align images based on the first dapi provided
@@ -15,11 +13,13 @@ def align_images(args, processed_czi0, processed_czi):
   aligned_images = np.zeros((totalChannels, np.shape(processed_czi)[1], np.shape(processed_czi)[2]),dtype = np.int16)
   #aligned_images = []
 
+  #WARNING: you need same dimension to use phase_cross_correlation
+
   dapi_target = processed_czi0[-1]
   dapi_to_offset = processed_czi[-1]
   print('dapi_target shape', np.shape(dapi_target))
   print('dapi_to_offset shape', np.shape(dapi_to_offset))
-  shifted, error, diffphase = register_translation(dapi_target, dapi_to_offset, 100)
+  shifted, error, diffphase = phase_cross_correlation(dapi_target, dapi_to_offset)
   print(f"Detected subpixel offset (y, x): {shifted}")
 
   #DAPI is the last channel, thus i don't have to read the last channel as it is used for alignment

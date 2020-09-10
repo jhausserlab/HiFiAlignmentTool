@@ -17,15 +17,6 @@ def norm_by(x, min_, max_):
     i2 = np.clip((x - norms[0])/(norms[1]-norms[0]), 0, 1)
     return i2
 
-# def print_info(czi):
-#   dims_shape = czi.dims_shape()
-#   mosaic_size = czi.read_mosaic_size()
-
-#   print('dims_shape')
-#   pp.pprint(dims_shape)
-#   print('mosaic_size')
-#   pp.pprint(mosaic_size)
-
 def read(args, czi):
   #reads the czi images and does background subtraction or normalization on it. It returns a np.array of values.
 
@@ -116,39 +107,3 @@ def get_czis(files):
   # sorting?
   # "file handling: load files in order of numerical round, not alphab sorting"
   return np.array(czis)
-
-def show(args, images):
-  if not args.yes:
-    with napari.gui_qt():
-      viewer = napari.Viewer()
-      # viewer = napari.view_image(images[0][0].astype(np.uint8))
-      for czi in images:
-        viewer.add_image(np.array(czi))
-
-def write(args, imagesToShape):
-
-  # Because i have np-array before, this part of code isn't needed as 
-  # it was used to get dimensions from a list and not np-array
-  #shape = np.shape(imagesToShape)
-  #newShape = shape[0] * shape[1]
-  #images = np.array(imagesToShape).reshape(1, newShape, shape[2], shape[3])
-  #images = np.array(imagesToShape).reshape(shape)
-  #images = np.array(imagesToShape)
-  #print(type(images))
-
-  #print('np.array(images).flatten()', np.shape(images))
-  if args.destination:
-    if os.path.exists(args.destination):
-      name = f'{datetime.now().strftime("%Y-%m-%d")}_{int(datetime.now(tz=timezone.utc).timestamp() * 1000)}'
-      extension = 'ome.tif'
-      file = f'{os.path.basename(args.destination)}/{name}.{extension}'
-
-      with tifffile.TiffWriter(file, bigtiff = True) as tif:
-        # additional metadata can be added, and in a more compatible format
-        # axes is just an (incorrect) example
-        # https://stackoverflow.com/questions/20529187/what-is-the-best-way-to-save-image-metadata-alongside-a-tif
-        #for image in images:
-        #tif.save(images, metadata={'axes':'TZCYX'}) <--- metadata does not work
-        tif.save(imagesToShape)
-    else:
-      print('destination path does not exist')
