@@ -49,10 +49,11 @@ def read(args, czi):
   # M is mosaic: index of tile for compositing a scene
   print('info – czi channels: ', channels)
 
-  # To get the dimension of the image
-  mosaic = czi.read_mosaic(C=0, scale_factor=1)
-  data = np.zeros((channels, np.shape(np.array(mosaic))[2], np.shape(np.array(mosaic))[3]))
-  print('Created dataset of size ', np.shape(data))
+  # To get the dimension of the image --> Not needed as it makes me do an  extra operation. 
+  # --> created the dataset in the for loop only during first iteration.
+  #mosaic = czi.read_mosaic(C=0, scale_factor=1)
+  #data = np.zeros((channels, np.shape(np.array(mosaic))[2], np.shape(np.array(mosaic))[3]))
+  #print('Created dataset of size ', np.shape(data))
 
   read_time_total = 0
   subtract_background_time_total = 0
@@ -60,26 +61,35 @@ def read(args, czi):
   for channel in range(channels):
     if args.time: read_time = time.monotonic()
     mosaic = czi.read_mosaic(C=channel, scale_factor=1)
+    #To create a defined size of dataset with all the information needed to do it
+    # meaning channels and size of the final stitiched image
+    if channel == 0:
+      data = np.zeros((channels, np.shape(np.array(mosaic))[2], np.shape(np.array(mosaic))[3]))
+      print('Created dataset of size ', np.shape(data))
+
+
     print('Mosaic', channel, 'DONE', np.shape(mosaic[0,0,:,:]))
     if args.time: read_time_total += time.monotonic() - read_time
 
     if args.time: subtract_background_time = time.monotonic()
     if not args.disable_subtract_background:
       #commented here to remove a local variable that isn't needed
-      #normed_mosaic_data =  norm_by(mosaic[0, 0, :, :], 5, 98) * 255
+      #normed_mosaic_data = norm_by(mosaic[0, 0, :, :], 5, 98) * 255
       #normed_mosaic_data = subtract_background(mosaic[0, 0, :, :])
-      data.append(norm_by(mosaic[0, 0, :, :], 5, 98) * 255)
+      #data.append(norm_by(mosaic[0, 0, :, :], 5, 98) * 255)
+      data[channel,:,:] = norm_by(mosaic[0, 0, :, :], 5, 98) * 255
       print(f'''info – channel {channel} read, and image processed''') #subtraction or normalization
     else:
       #data.append(mosaic[0,0,:,:])
       data[channel,:,:] = mosaic[0,0,:,:]
       print(f'''info – channel {channel} read''')
-      h = hp.heap()
-      print('AFTER APPEND \n', h,'\n ---------------------')
     if args.time: subtract_background_time_total += time.monotonic() - subtract_background_time
     #help free memory with garbage collector
     del mosaic
     gc.collect()
+
+    h = hp.heap()
+    print('AFTER Garbage collect \n', h,'\n ---------------------')
 
   if args.time:
     print('info – czi.read_mosaic time', timedelta(seconds=read_time_total))
