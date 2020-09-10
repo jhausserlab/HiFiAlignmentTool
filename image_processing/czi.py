@@ -64,7 +64,7 @@ def read(args, czi):
     #To create a defined size of dataset with all the information needed to do it
     # meaning channels and size of the final stitiched image
     if channel == 0:
-      data = np.zeros((channels, np.shape(np.array(mosaic))[2], np.shape(np.array(mosaic))[3]))
+      data = np.zeros((channels, np.shape(np.array(mosaic))[2], np.shape(np.array(mosaic))[3]), dtype= np.int16)
       print('Created dataset of size ', np.shape(data))
 
 
