@@ -82,25 +82,15 @@ def read(args, czi):
   return np.array(data)
 
 def get_processed_czis(args, czis):
-  # As I am now comparing 1 image after the other, we do not need to have a for loop as czis will always be 1.
-  # Because of this, this function is redundant with read. Not a big deal, but the code can be cleaner
-
-  #processed_czis = []
-  #for czi in czis:
-  #  processed_czis = read(args, czi)
-  #  processed_czis = read(args, czis[0])
   return read(args, czis[0])
 
 def get_czis(files):
   # Takes the string of files and creates np.array of the czi images 
-  # WARNING: the array consists of CZI images not transformed to values yet.
+  # WARNING: the array consists of CZI images not transformed to np.array yet.
   czis = []
 
   for file in files:
     czis.append(aicspylibczi.CziFile(pathlib.Path(file)))
-
-  # sorting?
-  # "file handling: load files in order of numerical round, not alphab sorting"
   return np.array(czis)
 
 

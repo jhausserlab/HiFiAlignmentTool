@@ -6,8 +6,10 @@ from datetime import timezone, datetime, timedelta
 import tifffile
 import pathlib
 import napari
-#from image_processing.czi import show, write
 from image_processing.process import get_images
+from image_processing.registration import get_aligned_images
+from image_processing.registration import get_tiffiles
+from sys import getsizeof # To know the size of the variables in bytes
 
 def get_files(source):
   return glob.glob(source + '/**/*.czi', recursive=True)
@@ -36,37 +38,28 @@ def show(args, images):
   if not args.yes:
     with napari.gui_qt():
       viewer = napari.Viewer()
-      # viewer = napari.view_image(images[0][0].astype(np.uint8))
       for czi in images:
         viewer.add_image(np.array(czi))
 
-def write(args, imagesToShape):
-
-  source = args.source
-  files = get_files(source)
+def write(args, file, image):
 
   if args.destination:
     if os.path.exists(args.destination):
-      #name = f'{datetime.now().strftime("%Y-%m-%d")}_{int(datetime.now(tz=timezone.utc).timestamp() * 1000)}'
-      name = files[0].split('.')[1].split('/')[2]
-      names = 'images_shape'
-      #extension = 'ome.tif'
-      #extension = 'tif'
-      #file = f'{os.path.basename(args.destination)}/{name}.{extension}'
+      name = file.split('.')[1].split('/')[2]
+      name_txt = 'images_shape'
       file = f'{os.path.basename(args.destination)}/{name}'
-      #Removed the ome. extension cause it didn't feel useful.
 
-      with tifffile.TiffWriter(file  + '.tif', bigtiff = True) as tif:
+      with tifffile.TiffWriter(file  + '_processed.tif', bigtiff = True) as tif:
         # additional metadata can be added, and in a more compatible format
         # axes is just an (incorrect) example
         # https://stackoverflow.com/questions/20529187/what-is-the-best-way-to-save-image-metadata-alongside-a-tif
         #for image in images:
         #tif.save(images, metadata={'axes':'TZCYX'}) <--- metadata does not work
-        tif.save(imagesToShape)
+        tif.save(image)
 
-      with open(f'{os.path.basename(args.destination)}/{names}' + '.txt', 'a') as f:
-        #Save C X Y for processing when we want to align
-        f.write(str(np.shape(imagesToShape)[0])+','+str(np.shape(imagesToShape)[1])+','+str(np.shape(imagesToShape)[2])+';\n')
+      with open(f'{os.path.basename(args.destination)}/{name_txt}' + '.txt', 'a') as f:
+        #Save dimension C X Y for processing when we want to align
+        f.write(str(np.shape(image)[0])+','+str(np.shape(image)[1])+','+str(np.shape(image)[2])+';')
     else:
       print('destination path does not exist')
 
@@ -77,19 +70,30 @@ def run(args):
 
   source = args.source
   files = get_files(source)
-
   list_files(source, files)
 
   if not args.yes:
     ask_for_approval()
 
-  images = get_images(args, files)
+  for file in files:
+    #Stitching images
+    image = get_images(args, file)
+    print('Size of file is', getsizeof(image))
+  # #show in napari
+    #show(args, image)
+    print('Saving image and image dimension')
+    write(args, file, image)
 
-  print('In RUN.py, shape of images', np.shape(images), type(images))
 
-  # show in napaari
-  show(args, images)
-  print('Saving image and image dimension')
-  write(args, images)
+  if args.disable_registration:
+    return print('No alignment done')
+  else:
+    source = args.destination
+    list_files(source,get_tiffiles(source))
+
+    if not args.yes:
+      ask_for_approval()
+
+    get_aligned_images(source)
 
   if args.time: print(timedelta(seconds=time.monotonic() - run_time))
