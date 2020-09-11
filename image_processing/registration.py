@@ -62,7 +62,7 @@ def align_images(source, dapi_target, processed_tif):
     aligned_images.append(shift(max_processed_tif, shift=(shifted[0], shifted[1]), mode='constant'))
         
   print('transformed channels done, image is of size', np.shape(aligned_images))
-  return aligned_images
+  return np.array(aligned_images)
 
 def get_aligned_images(source):
   # source needs to be a str of where are the tif stored
@@ -83,10 +83,18 @@ def get_aligned_images(source):
     processed_tif = tifffile.imread(file.split())
     print('Shape of image i is: ', np.shape(processed_tif))
     align_tif = align_images(source, dapi_target, processed_tif)
+
+    del processed_tif
+    gc.collect()
+    
     print('Saving aligned image')
     with tifffile.TiffWriter('./aligned/'+file.split()[0].split('/')[2].split('.')[0]+'_align.tif',
                                  bigtiff = True) as tif:
       tif.save(align_tif)
+
+    del align_tif
+    gc.collect()
+
   print('DONE!')
 
 

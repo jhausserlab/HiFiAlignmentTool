@@ -10,6 +10,7 @@ from image_processing.process import get_images
 from image_processing.registration import get_aligned_images
 from image_processing.registration import get_tiffiles
 from sys import getsizeof # To know the size of the variables in bytes
+import gc
 
 def get_files(source):
   return glob.glob(source + '/**/*.czi', recursive=True)
@@ -83,6 +84,9 @@ def run(args):
     #show(args, image)
     print('Saving image and image dimension')
     write(args, file, image)
+    print('DONE!')
+    del image
+    gc.collect()
 
 
   if args.disable_registration:
