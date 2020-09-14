@@ -17,9 +17,6 @@ def read(args, czi):
 
   data = []
   dims_shape = czi.dims_shape()
-  #hp.setrelheal() # To start registering how memory is used
-  #h = hp.heap() # Variable to use to read memory usage
-  #print(h) # To see what is going on between setrelheal and the print.
 
   #Debugger
   #hp = hpy()
@@ -42,12 +39,10 @@ def read(args, czi):
     if args.time: read_time = time.monotonic()
     mosaic = czi.read_mosaic(C=channel, scale_factor=1)
     #To create a defined size of dataset with all the information needed to do it
-    # meaning channels and size of the final stitiched image
+    # meaning channels and size of the final stitched image
     #if channel == 0:
       #data = np.zeros((channels, np.shape(np.array(mosaic))[2], np.shape(np.array(mosaic))[3]))
       #print('Created dataset of size ', np.shape(data))
-
-
     print('Mosaic', channel, 'DONE', np.shape(mosaic[0,0,:,:]))
     if args.time: read_time_total += time.monotonic() - read_time
 
@@ -78,7 +73,7 @@ def read(args, czi):
   #h = hp.heap()
   #print('FINAL SITUATION \n', h,'\n ---------------------','\n ---------------------')
 
-  print('data shape ', np.shape(data), 'data type', type(data))
+  print('data shape: ', np.shape(data), ' and data type: ', type(data))
   return np.array(data)
 
 def get_processed_czis(args, czis):

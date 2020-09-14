@@ -77,7 +77,6 @@ def get_aligned_images(source):
   del processed_tif0
   gc.collect()
     
-  #for file in files[1:]:
   for file in files:
     print('--- Aligning tif i:', file.split())
     processed_tif = tifffile.imread(file.split())
@@ -86,7 +85,7 @@ def get_aligned_images(source):
 
     del processed_tif
     gc.collect()
-    
+
     print('Saving aligned image')
     with tifffile.TiffWriter('./aligned/'+file.split()[0].split('/')[2].split('.')[0]+'_align.tif',
                                  bigtiff = True) as tif:

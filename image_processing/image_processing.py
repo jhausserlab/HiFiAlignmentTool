@@ -80,8 +80,8 @@ def run(args):
     #Stitching images
     image = get_images(args, file)
     print('Size of file is', getsizeof(image))
-  # #show in napari
-    #show(args, image)
+    # show in napari
+    show(args, image)
     print('Saving image and image dimension')
     write(args, file, image)
     print('DONE!')
