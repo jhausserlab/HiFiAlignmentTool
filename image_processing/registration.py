@@ -75,7 +75,7 @@ def align_images(source, dapi_target, processed_tif):
   for channel in range(np.shape(processed_tif)[0]):
     print('Recalibrating channel image', channel)
     max_processed_tif = pad_image(xmax, ymax, processed_tif[channel,:,:])
-    print('DONE, for channel', channel)
+    print('DONE recalibration for channel', channel)
     aligned_images.append(shift(max_processed_tif, shift=(shifted[0], shifted[1]), mode='constant'))
     print('channel', channel,'aligned')
 
@@ -88,16 +88,23 @@ def align_images(source, dapi_target, processed_tif):
 
 def get_aligned_images(source):
   # source needs to be a str of where are the tif stored
+  #Debugger
+  #hp = hpy()
+  #hp.setrelheap()
+  #h = hp.heap()
+  #print('INITIAL SITUATION \n', h,'\n ---------------------')
+
   files = get_tiffiles(source)
 
   print ('Reference dapi is from:', files[0].split())
   processed_tif0 = tifffile.imread(files[0].split())
   dapi_target = processed_tif0[-1]
+
     
   #Do not need processed_tif0 only dapi_target from it
   del processed_tif0
   gc.collect()
-    
+
   for file in files:
     print('--- Aligning tif i:', file.split())
     processed_tif = tifffile.imread(file.split())
@@ -114,6 +121,8 @@ def get_aligned_images(source):
 
     del align_tif
     gc.collect()
+    h = hp.heap()
+    print('After GC of align_tif \n', h,'\n ---------------------')
 
   print('DONE!')
 
