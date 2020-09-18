@@ -98,7 +98,9 @@ def get_aligned_images(source):
 
   print ('Reference dapi is from:', files[0].split())
   processed_tif0 = tifffile.imread(files[0].split())
-  dapi_target = processed_tif0[-1]
+  print('Loaded processed_tif0', getsizeof(processed_tif0)/10**6, 'MB')
+  dapi_target = np.array(processed_tif0[-1])
+  print('Extracted dapi_target', getsizeof(dapi_target)/10**6, 'MB')
 
     
   #Do not need processed_tif0 only dapi_target from it
@@ -108,7 +110,7 @@ def get_aligned_images(source):
   for file in files:
     print('--- Aligning tif i:', file.split())
     processed_tif = tifffile.imread(file.split())
-    print('Shape of image i is: ', np.shape(processed_tif))
+    print('Shape of image i is: ', np.shape(processed_tif), 'size', getsizeof(processed_tif)/10**6, 'MB')
     align_tif = align_images(source, dapi_target, processed_tif)
 
     del processed_tif
@@ -121,8 +123,6 @@ def get_aligned_images(source):
 
     del align_tif
     gc.collect()
-    h = hp.heap()
-    print('After GC of align_tif \n', h,'\n ---------------------')
 
   print('DONE!')
 
