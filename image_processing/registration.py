@@ -7,6 +7,9 @@ import glob
 import gc
 import sys
 import tifffile
+from sys import getsizeof # To know the size of the variables in bytes
+
+from guppy import hpy
 
 def get_tiffiles(source):
   return glob.glob(source + '/**/*.tif', recursive=True)
@@ -29,11 +32,12 @@ def get_max_shape(source):
         
   return xmax,ymax
 
-def pad_images(xmax, ymax, image):
+def pad_image(xmax, ymax, image):
   #image must be of dimension X,Y so we input channels not the whole image C,X,Y
   x_diff = xmax - np.shape(image)[0]
   y_diff = ymax - np.shape(image)[1]
 
+  #pads (left, right),(up,down)
   padded_image = np.pad(image,((int(np.floor((x_diff)/2)), int(np.ceil((x_diff)/2)))
                               ,(int(np.floor((y_diff)/2)), int(np.ceil((y_diff)/2)))),'constant')
   return padded_image
@@ -42,26 +46,44 @@ def pad_images(xmax, ymax, image):
 def align_images(source, dapi_target, processed_tif):
 
   aligned_images = []
+  #Debugger
+  #hp = hpy()
+  #hp.setrelheap()
+  #h = hp.heap()
+  #print('INITIAL SITUATION \n', h,'\n ---------------------')
 
-  dapi_to_offset = processed_tif[-1]
   print('dapi_target shape', np.shape(dapi_target))
-  print('dapi_to_offset shape', np.shape(dapi_to_offset))
+  print('dapi_to_offset shape', np.shape(processed_tif[-1]))
   
   xmax, ymax = get_max_shape(source)
   print('Recalibrating image size to', xmax, ymax)
-  max_dapi_target = pad_images(xmax, ymax, dapi_target)
+  max_dapi_target = pad_image(xmax, ymax, dapi_target)
+  print('DONE, for dapi target (size in MB)', getsizeof(max_dapi_target)/10**6)
+  #padding of dapi_to_offset which is processed_tif[-1], calling it max_processed_tif to keep variables low
+  max_processed_tif = pad_image(xmax, ymax, processed_tif[-1])
+  print('DONE, for dapi offset')
 
-  #padding of dapi_to_offset, calling it max_processed_tif to keep variables low
-  max_processed_tif = pad_images(xmax, ymax, dapi_to_offset)
-
+  print('Doing image registration')
   shifted, error, diffphase = phase_cross_correlation(max_dapi_target, max_processed_tif)
   print(f"Detected subpixel offset (y, x): {shifted}")
 
+  del max_processed_tif
+  del max_dapi_target
+  del dapi_target
+  gc.collect()
+
   for channel in range(np.shape(processed_tif)[0]):
-    max_processed_tif = pad_images(xmax, ymax, processed_tif[channel,:,:])
+    print('Recalibrating channel image', channel)
+    max_processed_tif = pad_image(xmax, ymax, processed_tif[channel,:,:])
+    print('DONE, for channel', channel)
     aligned_images.append(shift(max_processed_tif, shift=(shifted[0], shifted[1]), mode='constant'))
+    print('channel', channel,'aligned')
+
+    del max_processed_tif
+    gc.collect()
+
         
-  print('transformed channels done, image is of size', np.shape(aligned_images))
+  print('Transformed channels done, image is of size', np.shape(aligned_images))
   return np.array(aligned_images)
 
 def get_aligned_images(source):
@@ -72,7 +94,6 @@ def get_aligned_images(source):
   processed_tif0 = tifffile.imread(files[0].split())
   dapi_target = processed_tif0[-1]
     
-  #save_reference(source, files[0].split(), processed_tif0)
   #Do not need processed_tif0 only dapi_target from it
   del processed_tif0
   gc.collect()

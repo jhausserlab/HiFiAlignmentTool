@@ -78,6 +78,7 @@ def run(args):
 
   for file in files:
     #Stitching images
+    '''
     image = get_images(args, file)
     print('Size of file is', getsizeof(image))
     # show in napari
@@ -87,6 +88,7 @@ def run(args):
     print('DONE!')
     del image
     gc.collect()
+    '''
 
 
   if args.disable_registration:
