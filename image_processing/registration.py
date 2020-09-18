@@ -37,12 +37,101 @@ def pad_image(xmax, ymax, image):
   x_diff = xmax - np.shape(image)[0]
   y_diff = ymax - np.shape(image)[1]
 
-  #pads (left, right),(up,down)
+  #pads (up, down),(left,right)
   padded_image = np.pad(image,((int(np.floor((x_diff)/2)), int(np.ceil((x_diff)/2)))
                               ,(int(np.floor((y_diff)/2)), int(np.ceil((y_diff)/2)))),'constant')
   return padded_image
 
 
+def get_shift(xmax, ymax, dapi_target, dapi_to_offset):
+  print('dapi_target shape', np.shape(dapi_target))
+  print('dapi_to_offset shape', np.shape(dapi_to_offset))
+  
+  print('Recalibrating image size to', xmax, ymax)
+  max_dapi_target = pad_image(xmax, ymax, dapi_target)
+  print('DONE, for dapi target (size in MB)', getsizeof(max_dapi_target)/10**6)
+  #padding of dapi_to_offset
+  max_dapi_to_offset = pad_image(xmax, ymax, dapi_to_offset)
+  print('DONE, for dapi offset')
+
+  del dapi_target
+  del dapi_to_offset
+  gc.collect()
+
+  print('Getting Transform matrix')
+  shifted, error, diffphase = phase_cross_correlation(max_dapi_target, max_dapi_to_offset)
+  print(f"Detected subpixel offset (y, x): {shifted}")
+
+  del max_dapi_target
+  del max_dapi_to_offset
+  gc.collect()
+
+  return shifted
+
+
+def align_images(xmax, ymax, shifted, processed_tif):
+
+  aligned_images = []
+
+  for channel in range(np.shape(processed_tif)[0]):
+    max_processed_tif = pad_image(xmax, ymax, processed_tif[channel,:,:])
+    print('Done Recalibrating channel', channel)
+    aligned_images.append(shift(max_processed_tif, shift=(shifted[0], shifted[1]), mode='constant'))
+    print('channel', channel,'aligned')
+    del max_processed_tif
+    gc.collect()
+
+  print('Transformed channels done, image is of size', np.shape(aligned_images))
+  return np.array(aligned_images)
+
+def get_aligned_images(source):
+
+  files = get_tiffiles(source)
+
+  print ('Reference dapi is from:', files[0].split())
+  processed_tif0 = tifffile.imread(files[0].split())
+  print('Loaded processed_tif0', getsizeof(processed_tif0)/10**6, 'MB')
+  dapi_target = np.array(processed_tif0[-1])
+  print('Extracted dapi_target', getsizeof(dapi_target)/10**6, 'MB')
+    
+  #Do not need processed_tif0 only dapi_target from it
+  del processed_tif0
+  gc.collect()
+  
+  xmax, ymax = get_max_shape(source)
+
+  for file in files:
+    print('--- Aligning tif i:', file.split())
+    processed_tif = tifffile.imread(file.split())
+    print('Shape of image i is: ', np.shape(processed_tif), 'size', getsizeof(processed_tif)/10**6, 'MB')
+    dapi_to_offset = np.array(processed_tif[-1])
+    #delete processed_tif as it is not needed for registration (only need dapi) this is done to free memory.
+    del processed_tif
+    gc.collect()
+
+    shifted = get_shift(xmax, ymax, dapi_target, dapi_to_offset)
+
+    #Reload processed_tif to align all the images with the shift that we got from registration
+    processed_tif = tifffile.imread(file.split())
+    align_tif = align_images(xmax, ymax, shifted, processed_tif)
+
+    del processed_tif
+    gc.collect()
+
+    print('Saving aligned image')
+    with tifffile.TiffWriter('./aligned/'+file.split()[0].split('/')[2].split('.')[0]+'_align.tif',
+                                 bigtiff = True) as tif:
+      tif.save(align_tif)
+
+    del align_tif
+    gc.collect()
+
+  print('DONE!')
+
+
+'''
+CODE FROM 18/09/2020
+optimising the process of memory
 def align_images(source, dapi_target, processed_tif):
 
   aligned_images = []
@@ -85,50 +174,4 @@ def align_images(source, dapi_target, processed_tif):
         
   print('Transformed channels done, image is of size', np.shape(aligned_images))
   return np.array(aligned_images)
-
-def get_aligned_images(source):
-  # source needs to be a str of where are the tif stored
-  #Debugger
-  #hp = hpy()
-  #hp.setrelheap()
-  #h = hp.heap()
-  #print('INITIAL SITUATION \n', h,'\n ---------------------')
-
-  files = get_tiffiles(source)
-
-  print ('Reference dapi is from:', files[0].split())
-  processed_tif0 = tifffile.imread(files[0].split())
-  print('Loaded processed_tif0', getsizeof(processed_tif0)/10**6, 'MB')
-  dapi_target = np.array(processed_tif0[-1])
-  print('Extracted dapi_target', getsizeof(dapi_target)/10**6, 'MB')
-
-    
-  #Do not need processed_tif0 only dapi_target from it
-  del processed_tif0
-  gc.collect()
-
-  for file in files:
-    print('--- Aligning tif i:', file.split())
-    processed_tif = tifffile.imread(file.split())
-    print('Shape of image i is: ', np.shape(processed_tif), 'size', getsizeof(processed_tif)/10**6, 'MB')
-    align_tif = align_images(source, dapi_target, processed_tif)
-
-    del processed_tif
-    gc.collect()
-
-    print('Saving aligned image')
-    with tifffile.TiffWriter('./aligned/'+file.split()[0].split('/')[2].split('.')[0]+'_align.tif',
-                                 bigtiff = True) as tif:
-      tif.save(align_tif)
-
-    del align_tif
-    gc.collect()
-
-  print('DONE!')
-
-
-
-
-
-
-
+  '''
