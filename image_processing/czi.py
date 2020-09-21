@@ -87,10 +87,4 @@ def get_czis(files):
   for file in files:
     czis.append(aicspylibczi.CziFile(pathlib.Path(file)))
   return np.array(czis)
-
-
-#Don't need this code i think...
-  def norm_by(x, min_, max_):
-    norms = np.percentile(x, [min_, max_])
-    i2 = np.clip((x - norms[0])/(norms[1]-norms[0]), 0, 1)
-    return i2
+  

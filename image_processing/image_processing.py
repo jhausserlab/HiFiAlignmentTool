@@ -8,7 +8,6 @@ import pathlib
 import napari
 from image_processing.process import get_images
 from image_processing.registration import get_aligned_images
-from image_processing.registration import get_aligned_imagesCV
 from image_processing.registration import get_tiffiles
 from sys import getsizeof # To know the size of the variables in bytes
 import gc
@@ -79,7 +78,7 @@ def run(args):
 
   for file in files:
     #Stitching images
-    '''
+    #'''
     image = get_images(args, file)
     print('Size of file is', getsizeof(image))
     # show in napari
@@ -89,7 +88,7 @@ def run(args):
     print('DONE!')
     del image
     gc.collect()
-    '''
+    #'''
 
 
   if args.disable_registration:
@@ -102,6 +101,5 @@ def run(args):
       ask_for_approval()
 
     get_aligned_images(source)
-    #get_aligned_imagesCV(source)
 
   if args.time: print(timedelta(seconds=time.monotonic() - run_time))

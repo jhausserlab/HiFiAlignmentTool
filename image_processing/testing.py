@@ -1,119 +1,106 @@
-import numpy as np
-import numpy as np
-from skimage import data, io
-from skimage.registration import phase_cross_correlation # new form of register_translation
-from scipy.ndimage import shift
-import napari
-import glob
-import gc
-import sys
+import cv2
+#from image_processing.registration import get_aligned_imagesCV for image_processing
 
-from aicsimageio import AICSImage
-import tifffile
+def alignImages(im1, im2):
+#WARNING: im1 is the image to align and im2 is the image reference!
+# im1 will be DAPI to align and im2 will be dapi reference
+
+#https://www.learnopencv.com/image-alignment-feature-based-using-opencv-c-python/
+#reference code
+  MAX_FEATURES = 500 #number of feature points to detect in each image
+  GOOD_MATCH_PERCENT = 0.15 #the 15% best feature points that match between both images
+  # Convert images to grayscale ----> Dunno if we need this part (my guess is no)
+  im1Gray = cv2.cvtColor(im1, cv2.COLOR_GRAY2RGB)
+  im2Gray = cv2.cvtColor(im2, cv2.COLOR_GRAY2RGB)
+  
+  # Detect ORB features and compute descriptors.
+  orb = cv2.ORB_create(MAX_FEATURES)
+  # find the keypoints with ORB
+  print('BASDASDASDA', np.shape(im1Gray))
+  keypoints1, descriptors1 = orb.detectAndCompute(im1Gray, None) # here is im1Gray
+  keypoints2, descriptors2 = orb.detectAndCompute(im2Gray, None) # here is im2Gray
+  
+  # Match features.
+  matcher = cv2.DescriptorMatcher_create(cv2.DESCRIPTOR_MATCHER_BRUTEFORCE_HAMMING)
+  matches = matcher.match(descriptors1, descriptors2, None)
+  
+  # Sort matches by score
+  matches.sort(key=lambda x: x.distance, reverse=False)
+
+  # Remove not so good matches
+  numGoodMatches = int(len(matches) * GOOD_MATCH_PERCENT)
+  print('GOOD MATCHES', numGoodMatches)
+  matches = matches[:numGoodMatches]
+  
+  # Extract location of good matches
+  points1 = np.zeros((len(matches), 2), dtype=np.float32)
+  points2 = np.zeros((len(matches), 2), dtype=np.float32)
+
+  for i, match in enumerate(matches):
+    points1[i, :] = keypoints1[match.queryIdx].pt
+    points2[i, :] = keypoints2[match.trainIdx].pt
+  
+  # Find homography
+  h, mask = cv2.findHomography(points1, points2, cv2.RANSAC)
+  
+  return im1Reg, h
 
 
-def ask_for_approval():
-    hasApproval = False
+  def get_aligned_imagesCV(source):
 
-    while not hasApproval:
-        user_input = input('Continue with image processing for the above files? (Yes/No): ').strip().lower()
+  files = get_tiffiles(source)
 
-        if user_input == 'yes' or user_input == 'y':
-            hasApproval = True
-        elif user_input == 'no' or user_input == 'n':
-            print('Terminating image processing.')
-            exit()
-        else:
-            print('Please enter a valid option.')
+  print ('Reference dapi is from:', files[0].split())
+  processed_tif0 = tifffile.imread(files[0].split())
+  print('Loaded processed_tif0', getsizeof(processed_tif0)/10**6, 'MB')
+  dapi_target = np.array(processed_tif0[-1])
+  print('Extracted dapi_target', getsizeof(dapi_target)/10**6, 'MB')
     
-def get_tiffiles(source):
-    return glob.glob(source + '/**/*.tif', recursive=True)
+  #Do not need processed_tif0 only dapi_target from it
+  del processed_tif0
+  gc.collect()
+  
+  xmax, ymax = get_max_shape(source)
 
-def list_files(source, files):
-    file_names = '\n'.join(files)
-    file_list = f'''Found the following image files in {source}: \n\n{file_names}\n'''
-    print(file_list)
+  for file in files:
+    print('--- Aligning tif i:', file.split())
+    processed_tif = tifffile.imread(file.split())
+    print('Shape of image i is: ', np.shape(processed_tif), 'size', getsizeof(processed_tif)/10**6, 'MB')
+    dapi_to_offset = np.array(processed_tif[-1])
+    #delete processed_tif as it is not needed for registration (only need dapi) this is done to free memory.
+    del processed_tif
+    gc.collect()
+    # Find homography
+    h = alignImages(dapi_to_offset, dapi_target)
 
-def get_max_shape():
-    filepath = './output/images_shape.txt'
-    file = open(filepath,'r')
-    images_shape = file.read()
-    split = images_shape.split(';')
-    xmax = 0
-    ymax = 0
-    print(split)
-    #print('------------------------',xmax,ymax)
-    for i in range(len(split)-1):
-        print(i)
-        frag = split[i].split(',')
-        print(frag)
-        xmax = max(xmax,int(frag[1]))
-        ymax = max(ymax,int(frag[2]))
-        print('------------------------',xmax,ymax)
-        
-    return xmax,ymax
-
-## align images based on the first dapi provided
-
-def align_images(dapi_target, processed_tif):
+    #Reload processed_tif to align all the images with the Transform matrix using homography that we got from registration
+    processed_tif = tifffile.imread(file.split())
 
     aligned_images = []
-
-    #dapi_target = processed_tif0[-1]
-    dapi_to_offset = processed_tif[-1]
-    print('dapi_target shape', np.shape(dapi_target))
-    print('dapi_to_offset shape', np.shape(dapi_to_offset))
-
-    xmax, ymax = get_max_shape()
-
-    print('Recalibrating image size to', xmax, ymax)
-    x0_diff = xmax - np.shape(dapi_target)[0]
-    y0_diff = ymax - np.shape(dapi_target)[1]
-    
-    xi_diff = xmax - np.shape(dapi_to_offset)[0]
-    yi_diff = ymax - np.shape(dapi_to_offset)[1]
-
-    max_dapi_target = np.pad(dapi_target,((int(np.floor((x0_diff)/2)), int(np.ceil((x0_diff)/2)))
-               ,(int(np.floor((y0_diff)/2)), int(np.ceil((y0_diff)/2)))),'constant')
-    #padding of dapi_to_offset, calling it max_processed_tif to keep variables low
-    max_processed_tif = np.pad(dapi_to_offset,((int(np.floor((xi_diff)/2)), int(np.ceil((xi_diff)/2)))
-               ,(int(np.floor((yi_diff)/2)), int(np.ceil((yi_diff)/2)))),'constant')
-
-    shifted, error, diffphase = phase_cross_correlation(max_dapi_target, max_processed_tif)
-    print(f"Detected subpixel offset (y, x): {shifted}")
-
     for channel in range(np.shape(processed_tif)[0]):
-        max_processed_tif = np.pad(processed_tif[channel,:,:],((int(np.floor((xi_diff)/2)), int(np.ceil((xi_diff)/2)))
-                                                   ,(int(np.floor((yi_diff)/2)), int(np.ceil((yi_diff)/2))))
-                                   ,'constant')
-        aligned_images.append(shift(max_processed_tif, shift=(shifted[0], shifted[1]), mode='constant'))
-    print('transformed channels done, image is of size', np.shape(aligned_images))
-    return aligned_images
+      ## Might not need padding for this
+      #max_processed_tif = pad_image(xmax, ymax, processed_tif[channel,:,:])
+      #print('Done Recalibrating channel', channel)
+      # Use homography
+      aligned_images.append(cv2.warpPerspective(processed_tif[channel,:,:], h, (xmax, ymax))) #(width, height)
+      print('channel', channel,'aligned')
+      #del max_processed_tif
+      #gc.collect()
 
-def get_aligned_images(source):
-    # source needs to be a str of where are the tif stored
-    files = get_tiffiles(source)
-    list_files(source,files)
+    print('Transformed channels done, image is of size', np.shape(aligned_images), getsizeof(np.array(aligned_images))/10**6)
     
-    ask_for_approval()
 
-    print ('Reference dapi is from:', files[0].split())
-    processed_tif0 = tifffile.imread(files[0].split())
-    dapi_target = processed_tif0[-1]
-    #Do not need processed_tif0 only dapi_target from it
-    del processed_tif0
+    del processed_tif
     gc.collect()
-    
-    for file in files[1:]:
-        print('--- Aligning tif i:', file.split())
-        processed_tif = tifffile.imread(file.split())
-        print('Shape of image i is: ', np.shape(processed_tif))
-        align_tif = align_images(dapi_target, processed_tif)
-        print('Saving aligned image')
-        with tifffile.TiffWriter('./aligned/aligned'+files[0].split()[0].split('/')[2].split('.')[0]+'.tif',
+
+    print('Saving aligned image')
+    with tifffile.TiffWriter('./aligned/'+file.split()[0].split('/')[2].split('.')[0]+'_al.tif',
                                  bigtiff = True) as tif:
-            tif.save(align_tif)
+      tif.save(align_tif)
 
+    del align_tif
+    gc.collect()
 
-source = './output'
-get_aligned_images(source)
+  print('DONE!')
+  print('Transformed channels done, image is of size', np.shape(aligned_images))
+  return np.array(aligned_images)
