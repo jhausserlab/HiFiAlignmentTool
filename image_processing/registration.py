@@ -81,7 +81,7 @@ def align_images(xmax, ymax, shifted, processed_tif):
     del max_processed_tif
     gc.collect()
 
-  print('Transformed channels done, image is of size', np.shape(aligned_images))
+  print('Transformed channels done, image is of size', np.shape(aligned_images), getsizeof(np.array(aligned_images))/10**6)
   return np.array(aligned_images)
 
 def get_aligned_images(source):
@@ -119,7 +119,7 @@ def get_aligned_images(source):
     gc.collect()
 
     print('Saving aligned image')
-    with tifffile.TiffWriter('./aligned/'+file.split()[0].split('/')[2].split('.')[0]+'_align.tif',
+    with tifffile.TiffWriter('./aligned/'+file.split()[0].split('/')[2].split('.')[0]+'_al.tif',
                                  bigtiff = True) as tif:
       tif.save(align_tif)
 

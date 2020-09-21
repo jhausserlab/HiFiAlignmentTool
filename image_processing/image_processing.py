@@ -50,7 +50,7 @@ def write(args, file, image):
       name_txt = 'images_shape'
       file = f'{os.path.basename(args.destination)}/{name}'
 
-      with tifffile.TiffWriter(file  + '_processed.tif', bigtiff = True) as tif:
+      with tifffile.TiffWriter(file  + '_pr.tif', bigtiff = True) as tif:
         # additional metadata can be added, and in a more compatible format
         # axes is just an (incorrect) example
         # https://stackoverflow.com/questions/20529187/what-is-the-best-way-to-save-image-metadata-alongside-a-tif
