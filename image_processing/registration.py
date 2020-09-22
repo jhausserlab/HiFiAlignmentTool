@@ -106,7 +106,8 @@ def align_images(xmax, ymax, shifted, processed_tif):
 def get_shift(xmax, ymax, dapi_target, dapi_to_offset):
   print('dapi_target shape', np.shape(dapi_target))
   print('dapi_to_offset shape', np.shape(dapi_to_offset))
-  
+
+
   print('Recalibrating image size to', xmax, ymax)
   max_dapi_target = pad_image(xmax, ymax, dapi_target)
   print('DONE, for dapi target (size in MB)', getsizeof(max_dapi_target)/10**6)
@@ -119,8 +120,23 @@ def get_shift(xmax, ymax, dapi_target, dapi_to_offset):
   gc.collect()
 
   print('Getting Transform matrix')
-  shifted, error, diffphase = phase_cross_correlation(max_dapi_target, max_dapi_to_offset)
-  print(f"Detected subpixel offset (y, x): {shifted}")
+  xhalf = int(np.floor(xmax/2))
+  yhalf = int(np.floor(ymax/2))
+  print('Slicing image', xhalf, yhalf)
+
+  shifted, error, diffphase = phase_cross_correlation(max_dapi_target[:xhalf,:yhalf], max_dapi_to_offset[:xhalf,:yhalf])
+  print(f"Detected subpixel offset UP LEFT(y, x): {shifted}")
+  #shifted, error, diffphase = phase_cross_correlation(max_dapi_target[xhalf:,:yhalf], max_dapi_to_offset[xhalf:,:yhalf])
+  #print(f"Detected subpixel offset DOWN LEFT(y, x): {shifted}")
+  #shifted, error, diffphase = phase_cross_correlation(max_dapi_target[:xhalf,yhalf:], max_dapi_to_offset[:xhalf,yhalf:])
+  #print(f"Detected subpixel offset UP RIGHT(y, x): {shifted}")
+  #shifted, error, diffphase = phase_cross_correlation(max_dapi_target[xhalf:,yhalf:], max_dapi_to_offset[xhalf:,yhalf:])
+  #print(f"Detected subpixel offset DOWN RIGHT(y, x): {shifted}")
+
+  #Full image alignment
+  #shifted, error, diffphase = phase_cross_correlation(max_dapi_target, max_dapi_to_offset)
+  #print(f"Detected subpixel offset Original (y, x): {shifted}")
+
 
   del max_dapi_target
   del max_dapi_to_offset
