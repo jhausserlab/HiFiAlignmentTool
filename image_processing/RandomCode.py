@@ -1,5 +1,17 @@
-import cv2
+# http://www.gilgalad.co.uk/post/image-registration-skimage/
 #from image_processing.registration import get_aligned_imagesCV for image_processing
+
+import numpy as np
+from skimage import data, io
+
+from skimage.registration import phase_cross_correlation # new form of register_translation
+from scipy.ndimage import shift
+import napari
+import glob
+import gc
+import sys
+import tifffile
+from sys import getsizeof # To know the size of the variables in bytes
 
 def alignImages(im1, im2):
 #WARNING: im1 is the image to align and im2 is the image reference!

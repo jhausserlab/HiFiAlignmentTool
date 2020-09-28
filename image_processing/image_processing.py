@@ -78,7 +78,7 @@ def run(args):
 
   for file in files:
     #Stitching images
-    #'''
+    '''
     image = get_images(args, file)
     print('Size of file is', getsizeof(image))
     # show in napari

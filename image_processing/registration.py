@@ -52,12 +52,12 @@ def get_aligned_images(source):
   print('Loaded processed_tif0', getsizeof(processed_tif0)/10**6, 'MB')
   dapi_target = np.array(processed_tif0[-1])
   print('Extracted dapi_target', getsizeof(dapi_target)/10**6, 'MB')
-  input('CHECK RAM ---- tif0 and dapi loaded')
+  #input('CHECK RAM ---- tif0 and dapi loaded')
     
   #Do not need processed_tif0 only dapi_target from it
   del processed_tif0
   gc.collect()
-  input('CHECK RAM ---- tif0 deleted')
+  #input('CHECK RAM ---- tif0 deleted')
   
   xmax, ymax = get_max_shape(source)
 
@@ -66,11 +66,11 @@ def get_aligned_images(source):
     processed_tif = tifffile.imread(file.split())
     print('Shape of image i is: ', np.shape(processed_tif), 'size', getsizeof(processed_tif)/10**6, 'MB')
     dapi_to_offset = np.array(processed_tif[-1])
-    input('CHECK RAM ---- tif and dapi loaded')
+    #input('CHECK RAM ---- tif and dapi loaded')
     #delete processed_tif as it is not needed for registration (only need dapi) this is done to free memory.
     del processed_tif
     gc.collect()
-    input('CHECK RAM ---- tif deleted')
+    #input('CHECK RAM ---- tif deleted')
 
     #shifted = get_shift(xmax, ymax, dapi_target, dapi_to_offset)
     ###################
@@ -82,16 +82,16 @@ def get_aligned_images(source):
     max_dapi_target = pad_image(xmax, ymax, dapi_target)
     max_dapi_to_offset = pad_image(xmax, ymax, dapi_to_offset)
     print('DONE, padded dapiS are of size', getsizeof(max_dapi_target)/10**6)
-    input('CHECK RAM ---- dapiS padded')
+    #input('CHECK RAM ---- dapiS padded')
 
     del dapi_to_offset
     gc.collect()
-    input('CHECK RAM ---- 1 dapi deleted AND next step is phase_cross_correlation')
+    #input('CHECK RAM ---- 1 dapi deleted AND next step is phase_cross_correlation')
 
     print('Getting Transform matrix')
     # Size of the sub image at the center. (25'000, 20'000) is 1GB size
-    x_size = int(30000/2)
-    y_size = int(20000/2)
+    x_size = int(3000/2)
+    y_size = int(2000/2)
 
     xhalf = int(np.floor(xmax/2))
     yhalf = int(np.floor(ymax/2))
@@ -100,55 +100,55 @@ def get_aligned_images(source):
     shifted, error, diffphase = phase_cross_correlation(max_dapi_target[(xhalf-x_size):(xhalf+x_size), (yhalf-y_size):(yhalf+y_size)],
                                                      max_dapi_to_offset[(xhalf-x_size):(xhalf+x_size), (yhalf-y_size):(yhalf+y_size)])
     print(f"Detected subpixel offset (y, x): {shifted}")
-    input('CHECK RAM ---- After phase_cross_correlation')
+    #input('CHECK RAM ---- After phase_cross_correlation')
 
     del max_dapi_target
     del max_dapi_to_offset
     gc.collect()
-    input('CHECK RAM ---- padded dapiS deleted')
+    #input('CHECK RAM ---- padded dapiS deleted')
     ######################
 
     #Reload processed_tif to align all the images with the shift that we got from registration
     processed_tif = tifffile.imread(file.split())
     #align_tif = align_images(xmax, ymax, shifted, processed_tif)
-    input('CHECK RAM ---- tif loaded again for alignment')
+    #input('CHECK RAM ---- tif loaded again for alignment')
     ######################
     aligned_images = []
     channels = np.shape(processed_tif)[0]
     for channel in range(channels):
       max_processed_tif = pad_image(xmax, ymax, processed_tif[0,:,:])
-      input('CHECK RAM ---- padded channel')
+      #input('CHECK RAM ---- padded channel')
       print('Shape of processed_tif', np.shape(processed_tif))
       #To free memory as we do not need these channels
       if np.shape(processed_tif)[0] > 1: 
         processed_tif = np.delete(processed_tif, 0, axis = 0)
         print('Shape of processed_tif after delete', np.shape(processed_tif))
-      input('CHECK RAM ---- tif channel deleted as it is padded')
+      #input('CHECK RAM ---- tif channel deleted as it is padded')
       print('Done Recalibrating channel', channel)
       aligned_images.append(shift(max_processed_tif, shift=(shifted[0], shifted[1]), mode='constant'))
       print('channel', channel,'aligned')
-      input('CHECK RAM ---- shifted image given')
+      #input('CHECK RAM ---- shifted image given')
       del max_processed_tif
       gc.collect()
-      input('CHECK RAM ---- max_processed_tif variable deleted and Start again')
+      #input('CHECK RAM ---- max_processed_tif variable deleted and Start again')
 
     print('Transformed channels done, image is of size', np.shape(aligned_images), getsizeof(np.array(aligned_images))/10**6)
     ######################
 
     del processed_tif
     gc.collect()
-    input('CHECK RAM ---- processed_tif deleted (what is left of it)')
+    #input('CHECK RAM ---- processed_tif deleted (what is left of it)')
 
     print('Saving aligned image')
     with tifffile.TiffWriter('./aligned/'+file.split()[0].split('/')[2].split('.')[0]+'_al.tif',
                                  bigtiff = True) as tif:
       #tif.save(align_tif)
       tif.save(np.array(aligned_images))
-    input('CHECK RAM ---- aligned_images saved')
+    #input('CHECK RAM ---- aligned_images saved')
 
     del aligned_images
     gc.collect()
-    input('CHECK RAM ---- aligned_images deleted')
+    #input('CHECK RAM ---- aligned_images deleted')
 
   print('DONE!')
 
