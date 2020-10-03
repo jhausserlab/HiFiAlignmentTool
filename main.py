@@ -35,6 +35,14 @@ parser.add_argument(
   default=False,
   help='downscale images if images too large for computer RAM'
 )
+parser.add_argument(
+  '--factor', 
+  metavar ='N', 
+  type = float, 
+  nargs ='+', 
+  default=[0.2],
+  help ='Scale factor between 0. - 1.') 
+
 
 args = parser.parse_args()
 

@@ -62,8 +62,8 @@ def get_aligned_images(args, source):
   
   if args.downscale:
     anti_alias = True
-    rescale_fct = 0.2
-    print('----------- Images will be downscaled by',rescale_fct,'-----------')
+    rescale_fct = args.factor[0]
+    print('------ Images will be downscaled by factor',rescale_fct*100,'% ------')
     pad_dapi_ref = rescale(pad_dapi_ref, rescale_fct, anti_aliasing=anti_alias)
     print('dapi_ref rescaled', getsizeof(np.array(pad_dapi_ref))/10**6, 'MB')
   else:
