@@ -71,7 +71,7 @@ def run(args):
   if not args.disable_stitching:
     for file in files:
       image = get_images(args, file)
-      # show in napari
+      #show in napari
       #show(args, image)
       print('Saving image and image dimension')
       write(args, file, image)
