@@ -1,12 +1,10 @@
 import glob
 import numpy as np
-import time
 import os
-from datetime import timezone, datetime, timedelta
 import tifffile
 import pathlib
 import napari
-from image_processing.process import get_images
+from image_processing.czi import get_images
 from image_processing.registration import get_aligned_images
 from image_processing.registration import get_tiffiles
 from sys import getsizeof # To know the size of the variables in bytes
@@ -51,23 +49,17 @@ def write(args, file, image):
       file = f'{os.path.basename(args.destination)}/{name}'
 
       with tifffile.TiffWriter(file  + '_pr.tif', bigtiff = True) as tif:
-        # additional metadata can be added, and in a more compatible format
-        # axes is just an (incorrect) example
-        # https://stackoverflow.com/questions/20529187/what-is-the-best-way-to-save-image-metadata-alongside-a-tif
-        #for image in images:
-        #tif.save(images, metadata={'axes':'TZCYX'}) <--- metadata does not work
         tif.save(image)
 
       with open(f'{os.path.basename(args.destination)}/{name_txt}' + '.txt', 'a') as f:
-        #Save dimension C X Y for processing when we want to align
+        #Save dimension C X Y for processing when we want to register
         f.write(str(np.shape(image)[0])+','+str(np.shape(image)[1])+','+str(np.shape(image)[2])+';')
     else:
       print('destination path does not exist')
 
 def run(args):
-  # gets the files and then gets the processed aligned images (through get_images) after shows through napari 
+  # gets the files and then gets the stitched images (through get_images) and finally does image registration
   # and finally saves a tif
-  if args.time: run_time = time.monotonic()
 
   source = args.source
   files = get_files(source)
@@ -80,9 +72,8 @@ def run(args):
     #Stitching images
     '''
     image = get_images(args, file)
-    print('Size of file is', getsizeof(image))
     # show in napari
-    show(args, image)
+    #show(args, image)
     print('Saving image and image dimension')
     write(args, file, image)
     print('DONE!')
@@ -91,9 +82,7 @@ def run(args):
     #'''
 
 
-  if args.disable_registration:
-    return print('No alignment done')
-  else:
+  if not args.disable_registration:
     source = args.destination
     list_files(source,get_tiffiles(source))
 
@@ -101,5 +90,3 @@ def run(args):
       ask_for_approval()
 
     get_aligned_images(source)
-
-  if args.time: print(timedelta(seconds=time.monotonic() - run_time))

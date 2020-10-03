@@ -1,28 +1,15 @@
 import aicspylibczi
-import napari
 import numpy as np
 import os
 import pathlib
 import tifffile
-import time
-from datetime import timezone, datetime, timedelta
-from image_processing.subtract_background import subtract_background
 import gc
-
-from guppy import hpy
 from sys import getsizeof # To know the size of the variables in bytes
 
-def read(args, czi):
-  #reads the czi images and does background subtraction or normalization on it. It returns a np.array of values.
-
+def get_stitched_czis(args, czi):
+  #stitches the czi images. It returns a np.array of values.
   data = []
   dims_shape = czi.dims_shape()
-
-  #Debugger
-  #hp = hpy()
-  #hp.setrelheap()
-  #h = hp.heap()
-  #print('INITIAL SITUATION \n', h,'\n ---------------------')
 
   if not 'C' in dims_shape[0]:
     raise Exception("Image lacks Channels")
@@ -32,52 +19,22 @@ def read(args, czi):
   # M is mosaic: index of tile for compositing a scene
   print('info – czi channels: ', channels)
 
-  read_time_total = 0
-  subtract_background_time_total = 0
-
   for channel in range(channels):
-    if args.time: read_time = time.monotonic()
     mosaic = czi.read_mosaic(C=channel, scale_factor=1)
-    #To create a defined size of dataset with all the information needed to do it
-    # meaning channels and size of the final stitched image
-    #if channel == 0:
-      #data = np.zeros((channels, np.shape(np.array(mosaic))[2], np.shape(np.array(mosaic))[3]))
-      #print('Created dataset of size ', np.shape(data))
-    print('Mosaic', channel, 'DONE', np.shape(mosaic[0,0,:,:]))
-    if args.time: read_time_total += time.monotonic() - read_time
+    print('info – channel', channel, 'stitched')
 
-    if args.time: subtract_background_time = time.monotonic()
     if not args.disable_subtract_background:
-      #commented here to remove a local variable that isn't needed
-      #normed_mosaic_data = norm_by(mosaic[0, 0, :, :], 5, 98) * 255
-      #normed_mosaic_data = subtract_background(mosaic[0, 0, :, :])
       data.append(norm_by(mosaic[0, 0, :, :], 5, 98) * 255)
-      #data[channel,:,:] = norm_by(mosaic[0, 0, :, :], 5, 98) * 255
-      print(f'''info – channel {channel} read, and image processed''') #subtraction or normalization
     else:
       data.append(mosaic[0,0,:,:])
-      #data[channel,:,:] = mosaic[0,0,:,:]
-      print(f'''info – channel {channel} read''')
-    if args.time: subtract_background_time_total += time.monotonic() - subtract_background_time
-    #help free memory with garbage collector
+
     del mosaic
     gc.collect()
 
-    #h = hp.heap()
-    #print('AFTER Garbage collect \n', h,'\n ---------------------')
-
-  if args.time:
-    print('info – czi.read_mosaic time', timedelta(seconds=read_time_total))
-    print('info – subtract_background time', timedelta(seconds=subtract_background_time_total))
-
-  #h = hp.heap()
-  #print('FINAL SITUATION \n', h,'\n ---------------------','\n ---------------------')
-
-  print('data shape: ', np.shape(data), ' and data type: ', type(data))
   return np.array(data)
 
-def get_processed_czis(args, czis):
-  return read(args, czis[0])
+#def get_stitched_czis(args, czis):
+#  return stitch(args, czis[0])
 
 def get_czis(files):
   # Takes the string of files and creates np.array of the czi images 
@@ -87,4 +44,12 @@ def get_czis(files):
   for file in files:
     czis.append(aicspylibczi.CziFile(pathlib.Path(file)))
   return np.array(czis)
+
+def get_images(args, file):
+  #Takes file as argument and returns the stitched images of the file
+  print('--- Processing:', file.split())
+  stitched_czi = get_stitched_czis(args,get_czis(file.split())[0])
+  print('Shape of stitched shape: ', np.shape(stitched_czi), 'of size', getsizeof(np.array(stitched_czi))/10**6, 'MB')
+  #------------------------
+  return stitched_czi
   

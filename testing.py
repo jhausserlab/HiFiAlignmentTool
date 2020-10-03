@@ -1,11 +1,7 @@
 import aicspylibczi
-import napari
 import numpy as np
 import os
 import pathlib
-import tifffile
-import time
-import gc
 
 import numpy as np
 from skimage import data, io
@@ -13,7 +9,6 @@ from skimage import data, io
 from skimage.transform import warp_polar, rotate, rescale
 from skimage.registration import phase_cross_correlation # new form of register_translation
 from scipy.ndimage import shift
-import napari
 import glob
 import gc
 import sys
@@ -436,8 +431,20 @@ def get_aligned_imagesStackReg():
   del processed_tif0
   gc.collect()
   #input('CHECK RAM ---- tif0 deleted')
-  
+
   xmax, ymax = get_max_shape(source)
+
+  #input('CHECK RAM ---- 1 dapi deleted AND next step is phase_cross_correlation')
+  subimage = False
+  anti_alias = True
+  rescale_fct = 0.25
+
+  max_dapi_target = pad_image(xmax, ymax, dapi_target)
+  max_dapi_target = rescale(max_dapi_target, rescale_fct, anti_aliasing=anti_alias)
+  print('dai target padded and rescaled', getsizeof(np.array(max_dapi_target))/10**6, 'MB')
+
+  del dapi_target
+  gc.collect()
 
   for file in files:
     print('--- Aligning tif i:', file.split())
@@ -452,34 +459,40 @@ def get_aligned_imagesStackReg():
 
     #shifted = get_shift(xmax, ymax, dapi_target, dapi_to_offset)
     ###################
-    print('dapi_target shape', np.shape(dapi_target))
     print('dapi_to_offset shape', np.shape(dapi_to_offset))
 
     print('Recalibrating image size to', xmax, ymax)
     #padding of dapi
-    max_dapi_target = pad_image(xmax, ymax, dapi_target)
     max_dapi_to_offset = pad_image(xmax, ymax, dapi_to_offset)
-    print('DONE, padded dapiS are of size',np.shape(max_dapi_target), getsizeof(max_dapi_target)/10**6)
+    print('DONE, padded dapi are of size',np.shape(max_dapi_to_offset), getsizeof(max_dapi_to_offset)/10**6)
     #input('CHECK RAM ---- dapiS padded')
 
     del dapi_to_offset
     gc.collect()
-    #input('CHECK RAM ---- 1 dapi deleted AND next step is phase_cross_correlation')
-    anti_alias = True
-    rescale_fct = 0.25
-    max_dapi_target = rescale(max_dapi_target, rescale_fct, anti_aliasing=anti_alias)
     max_dapi_to_offset = rescale(max_dapi_to_offset, rescale_fct, anti_aliasing=anti_alias)
     print('Down scaled the images to', np.shape(max_dapi_to_offset))
 
     print('Getting Transform matrix')
-    # Size of the sub image at the center. (25'000, 20'000) is 1GB size
-    sr = StackReg(StackReg.RIGID_BODY)
 
-    # register mov to ref sr.register(ref, mov)
-    sr.register(max_dapi_target, max_dapi_to_offset)
+    sr = StackReg(StackReg.RIGID_BODY)
+    if subimage:
+      # register mov to ref sr.register(ref, mov)
+      # Size of the sub image at the center. (25'000, 20'000) is 1GB size
+      x_size = int(6000*rescale_fct/2)
+      y_size = int(6000*rescale_fct/2)
+
+      xhalf = int(np.floor(xmax*rescale_fct/2))
+      yhalf = int(np.floor(ymax*rescale_fct/2))
+      print('center of image', xhalf, yhalf)
+      print('Taking sub image registration')
+      sr.register(max_dapi_target[(xhalf-x_size):(xhalf+x_size), (yhalf-y_size):(yhalf+y_size)],
+                  max_dapi_to_offset[(xhalf-x_size):(xhalf+x_size), (yhalf-y_size):(yhalf+y_size)])
+    else:
+      print('Taking full image registration')
+      sr.register(max_dapi_target, max_dapi_to_offset)
+
     print('Image registration done')
 
-    del max_dapi_target
     del max_dapi_to_offset
     gc.collect()
     #input('CHECK RAM ---- padded dapiS deleted')
