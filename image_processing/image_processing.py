@@ -81,7 +81,6 @@ def run(args):
     gc.collect()
     #'''
 
-
   if not args.disable_registration:
     source = args.destination
     list_files(source,get_tiffiles(source))
@@ -89,4 +88,7 @@ def run(args):
     if not args.yes:
       ask_for_approval()
 
-    get_aligned_images(source)
+    get_aligned_images(args, source)
+  else:
+    print("Image not registered")
+    exit()

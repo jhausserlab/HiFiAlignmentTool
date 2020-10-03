@@ -22,11 +22,7 @@ def get_stitched_czis(args, czi):
   for channel in range(channels):
     mosaic = czi.read_mosaic(C=channel, scale_factor=1)
     print('info – channel', channel, 'stitched')
-
-    if not args.disable_subtract_background:
-      data.append(norm_by(mosaic[0, 0, :, :], 5, 98) * 255)
-    else:
-      data.append(mosaic[0,0,:,:])
+    data.append(mosaic[0,0,:,:])
 
     del mosaic
     gc.collect()
