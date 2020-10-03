@@ -38,7 +38,7 @@ def pad_image(i_max, j_max, image):
                               ,(int(np.floor((j_diff)/2)), int(np.ceil((j_diff)/2)))),'constant')
   return padded_image
 
-def get_aligned_images(source):
+def get_aligned_images(args, source):
 
   files = get_tiffiles(source)
 
@@ -56,9 +56,130 @@ def get_aligned_images(source):
 
   anti_alias = True
   rescale_fct = 0.25
-  subimage = False
-  i_size = int(6000*rescale_fct/2)
-  j_size = int(6000*rescale_fct/2)
+
+  if(np.shape(dapi_ref)[0] == i_max && np.shape(dapi_ref)[1] == j_max):
+    pad_dapi_ref = dapi_ref
+  else:
+    print('----------- Images will be padded -----------')
+    pad_dapi_ref = pad_image(i_max, j_max, dapi_ref)
+    
+  pad_dapi_ref = rescale(pad_dapi_ref, rescale_fct, anti_aliasing=anti_alias)
+  print('dapi_ref rescaled', getsizeof(np.array(pad_dapi_ref))/10**6, 'MB')
+
+  del dapi_ref
+  gc.collect()
+
+  for file in files:
+
+    print('--- Aligning tif i:', file.split())
+    tif_mov = tifffile.imread(file.split())
+    print('Shape of image i is: ', np.shape(tif_mov), 'size', getsizeof(tif_mov)/10**6, 'MB')
+    dapi_mov = np.array(tif_mov[-1])
+    #delete tif_mov as it is not needed for registration (only need dapi) this is done to free memory.
+    del tif_mov
+    gc.collect()
+
+    print('dapi_mov shape', np.shape(dapi_mov))
+    if(np.shape(dapi_mov)[0] == i_max && np.shape(dapi_mov)[1] == j_max):
+      pad_dapi_mov = dapi_mov
+    else:
+      print('Padding image size to', i_max, j_max)
+      pad_dapi_mov = pad_image(i_max, j_max, dapi_mov)
+      print('pad_dapi_mov is of size',np.shape(pad_dapi_mov), getsizeof(pad_dapi_mov)/10**6)
+    del dapi_mov
+    gc.collect()
+
+    pad_dapi_mov = rescale(pad_dapi_mov, rescale_fct, anti_aliasing=anti_alias)
+    print('Down scaled the image to', np.shape(pad_dapi_mov))
+
+    print('Getting Transform matrix')
+    sr = StackReg(StackReg.RIGID_BODY)
+    """
+    #The code didn't seem to work to register subimages. Better to register the image as a whole
+    #Keeping the code in case we still want to try
+    subimage = False
+    i_size = int(6000*rescale_fct/2)
+    j_size = int(6000*rescale_fct/2)
+    if subimage:
+      # register mov to ref sr.register(ref, mov)
+      # Size of the sub image at the center. (25'000, 20'000) is 1GB size
+
+      ihalf = int(np.floor(i_max*rescale_fct/2))
+      jhalf = int(np.floor(j_max*rescale_fct/2))
+      print('center of image', ihalf, jhalf)
+      print('Taking sub image registration')
+      sr.register(pad_dapi_ref[(ihalf-i_size):(ihalf+i_size), (jhalf-j_size):(jhalf+j_size)],
+                  pad_dapi_mov[(ihalf-i_size):(ihalf+i_size), (jhalf-j_size):(jhalf+j_size)])
+    else:
+      print('Taking full image registration')
+      sr.register(pad_dapi_ref, pad_dapi_mov)
+    """
+    
+    sr.register(pad_dapi_ref, pad_dapi_mov)
+    print('Registration matrix acquired and now transforming the channels')
+
+    del pad_dapi_mov
+    gc.collect()
+
+    #Reload tif_mov to align all the images with the shift that we got from registration
+    tif_mov = tifffile.imread(file.split())
+    
+    aligned_images = []
+    channels = np.shape(tif_mov)[0]
+    for channel in range(channels):
+      if(np.shape(tif_mov)[1] == i_max && np.shape(tif_mov)[2] == j_max):
+        pad_tif_mov = tif_mov[0,:,:]
+      else:
+        pad_tif_mov = pad_image(i_max, j_max, tif_mov[0,:,:])
+      
+      pad_tif_mov = rescale(pad_tif_mov, rescale_fct, anti_aliasing=anti_alias)
+      #To free memory as we do not need these channels
+      if np.shape(tif_mov)[0] > 1: 
+        tif_mov = np.delete(tif_mov, 0, axis = 0)
+
+      aligned_images.append(sr.transform(pad_tif_mov))
+      print('info -- channel', channel,'aligned')
+      del pad_tif_mov
+      gc.collect()
+
+    print('Transformed channels done, image is of size', np.shape(aligned_images), 
+                                  getsizeof(np.array(aligned_images))/10**6, 'MB')
+
+    del tif_mov
+    gc.collect()
+
+    print('Saving aligned image')
+    with tifffile.TiffWriter('./aligned/'+file.split()[0].split('/')[2].split('.')[0]+'_al.tif',
+                                 bigtiff = True) as tif:
+      tif.save(np.array(aligned_images))
+
+    del aligned_images
+    gc.collect()
+
+  print('DONE! All images are registered')
+
+##### The functions below are not needed anymore
+from skimage.registration import phase_cross_correlation # new form of register_translation
+from scipy.ndimage import shift
+
+def get_aligned_images_V1(args, source):
+
+  files = get_tiffiles(source)
+
+  print ('Reference dapi is from:', files[0].split())
+  tif_ref = tifffile.imread(files[0].split())
+  print('Loaded tif_ref', getsizeof(tif_ref)/10**6, 'MB')
+  dapi_ref = np.array(tif_ref[-1])
+  print('Extracted dapi_ref', getsizeof(dapi_ref)/10**6, 'MB')
+    
+  #Do not need tif_ref only dapi_ref from it
+  del tif_ref
+  gc.collect()
+  
+  i_max, j_max = get_max_shape(source)
+
+  anti_alias = True
+  rescale_fct = 0.25
 
   pad_dapi_ref = pad_image(i_max, j_max, dapi_ref)
   pad_dapi_ref = rescale(pad_dapi_ref, rescale_fct, anti_aliasing=anti_alias)
@@ -92,6 +213,12 @@ def get_aligned_images(source):
     print('Getting Transform matrix')
 
     sr = StackReg(StackReg.RIGID_BODY)
+    """
+    #The code didn't seem to work to register subimages. Better to register the image as a whole
+    #Keeping the code in case we still want to try
+    subimage = False
+    i_size = int(6000*rescale_fct/2)
+    j_size = int(6000*rescale_fct/2)
     if subimage:
       # register mov to ref sr.register(ref, mov)
       # Size of the sub image at the center. (25'000, 20'000) is 1GB size
@@ -105,7 +232,9 @@ def get_aligned_images(source):
     else:
       print('Taking full image registration')
       sr.register(pad_dapi_ref, pad_dapi_mov)
-
+    """
+    
+    sr.register(pad_dapi_ref, pad_dapi_mov)
     print('Registration matrix acquired and now transforming the channels')
 
     del pad_dapi_mov
@@ -144,10 +273,7 @@ def get_aligned_images(source):
 
   print('DONE! All images are registered')
 
-##### The functions below are not needed anymore
-from skimage.registration import phase_cross_correlation # new form of register_translation
-from scipy.ndimage import shift
-def get_aligned_images_V0(source):
+def get_aligned_images_V0(args, source):
 
   files = get_tiffiles(source)
 

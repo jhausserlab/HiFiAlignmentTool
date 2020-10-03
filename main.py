@@ -13,14 +13,6 @@ parser = argparse.ArgumentParser(description='Microscopy Image processing')
 parser.add_argument('source', type=dir_path, help='input path, the folder of czi to stitch')
 parser.add_argument('destination', type=dir_path, help='ouput path, the folder where to put the stitched images')
 parser.add_argument(
-  '-t',
-  '--time',
-  action='store_const',
-  const=True,
-  default=False,
-  help='measure time of slow running function calls'
-)
-parser.add_argument(
   '-y',
   '--yes',
   action='store_const',
@@ -36,11 +28,12 @@ parser.add_argument(
   help='disable image registration'
 )
 parser.add_argument(
-  '--disable-subtract-background',
+  '-d',
+  '--downscale',
   action='store_const',
   const=True,
   default=False,
-  help='disable subtract background'
+  help='downscale images if images too large for computer RAM'
 )
 
 args = parser.parse_args()
