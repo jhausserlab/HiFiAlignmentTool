@@ -54,17 +54,21 @@ def get_aligned_images(args, source):
   
   i_max, j_max = get_max_shape(source)
 
-  anti_alias = True
-  rescale_fct = 0.25
-
   if(np.shape(dapi_ref)[0] == i_max and np.shape(dapi_ref)[1] == j_max):
     pad_dapi_ref = dapi_ref
   else:
-    print('----------- Images will be padded -----------')
+    print('---------------- Images will be padded -----------------')
     pad_dapi_ref = pad_image(i_max, j_max, dapi_ref)
-    
-  pad_dapi_ref = rescale(pad_dapi_ref, rescale_fct, anti_aliasing=anti_alias)
-  print('dapi_ref rescaled', getsizeof(np.array(pad_dapi_ref))/10**6, 'MB')
+  
+  if args.downscale:
+    anti_alias = True
+    rescale_fct = 0.2
+    print('----------- Images will be downscaled by',rescale_fct,'-----------')
+    pad_dapi_ref = rescale(pad_dapi_ref, rescale_fct, anti_aliasing=anti_alias)
+    print('dapi_ref rescaled', getsizeof(np.array(pad_dapi_ref))/10**6, 'MB')
+  else:
+    print('--------------- Keeping full resolution ----------------')
+    print('dapi_ref ', getsizeof(np.array(pad_dapi_ref))/10**6, 'MB')
 
   del dapi_ref
   gc.collect()
@@ -79,18 +83,18 @@ def get_aligned_images(args, source):
     del tif_mov
     gc.collect()
 
-    print('dapi_mov shape', np.shape(dapi_mov))
     if(np.shape(dapi_mov)[0] == i_max and np.shape(dapi_mov)[1] == j_max):
       pad_dapi_mov = dapi_mov
     else:
       print('Padding image size to', i_max, j_max)
       pad_dapi_mov = pad_image(i_max, j_max, dapi_mov)
-      print('pad_dapi_mov is of size',np.shape(pad_dapi_mov), getsizeof(pad_dapi_mov)/10**6)
+      print('pad_dapi_mov is of size',np.shape(pad_dapi_mov), getsizeof(pad_dapi_mov)/10**6, 'MB')
     del dapi_mov
     gc.collect()
 
-    pad_dapi_mov = rescale(pad_dapi_mov, rescale_fct, anti_aliasing=anti_alias)
-    print('Down scaled the image to', np.shape(pad_dapi_mov))
+    if args.downscale:
+      pad_dapi_mov = rescale(pad_dapi_mov, rescale_fct, anti_aliasing=anti_alias)
+      print('Down scaled the image to', np.shape(pad_dapi_mov))
 
     print('Getting Transform matrix')
     sr = StackReg(StackReg.RIGID_BODY)
@@ -132,7 +136,8 @@ def get_aligned_images(args, source):
       else:
         pad_tif_mov = pad_image(i_max, j_max, tif_mov[0,:,:])
       
-      pad_tif_mov = rescale(pad_tif_mov, rescale_fct, anti_aliasing=anti_alias)
+      if args.downscale:
+        pad_tif_mov = rescale(pad_tif_mov, rescale_fct, anti_aliasing=anti_alias)
       #To free memory as we do not need these channels
       if np.shape(tif_mov)[0] > 1: 
         tif_mov = np.delete(tif_mov, 0, axis = 0)

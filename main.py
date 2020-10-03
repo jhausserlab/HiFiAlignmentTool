@@ -11,7 +11,7 @@ def dir_path(string):
 parser = argparse.ArgumentParser(description='Microscopy Image processing')
 
 parser.add_argument('source', type=dir_path, help='input path, the folder of czi to stitch')
-parser.add_argument('destination', type=dir_path, help='ouput path, the folder where to put the stitched images')
+parser.add_argument('destination', type=dir_path, help='output path, the folder where to put the stitched images')
 parser.add_argument(
   '-y',
   '--yes',
