@@ -88,13 +88,13 @@ def get_aligned_images(args, source):
     else:
       print('Padding image size to', i_max, j_max)
       pad_dapi_mov = pad_image(i_max, j_max, dapi_mov)
-      print('pad_dapi_mov is of size',np.shape(pad_dapi_mov), getsizeof(pad_dapi_mov)/10**6, 'MB')
+      print('pad_dapi_mov is of size',np.shape(pad_dapi_mov))
     del dapi_mov
     gc.collect()
 
     if args.downscale:
       pad_dapi_mov = rescale(pad_dapi_mov, rescale_fct, anti_aliasing=anti_alias)
-      print('Down scaled the image to', np.shape(pad_dapi_mov))
+      print('Down scaled the image to', np.shape(pad_dapi_mov), getsizeof(np.array(pad_dapi_mov))/10**6, 'MB')
 
     print('Getting Transform matrix')
     sr = StackReg(StackReg.RIGID_BODY)

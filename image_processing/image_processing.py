@@ -45,7 +45,7 @@ def write(args, file, image):
   if args.destination:
     if os.path.exists(args.destination):
       name = file.split('.')[1].split('/')[2]
-      name_txt = 'images_shape'
+      name_txt = 'image_shape'
       file = f'{os.path.basename(args.destination)}/{name}'
 
       with tifffile.TiffWriter(file  + '_pr.tif', bigtiff = True) as tif:
@@ -68,18 +68,18 @@ def run(args):
   if not args.yes:
     ask_for_approval()
 
-  for file in files:
-    #Stitching images
-    '''
-    image = get_images(args, file)
-    # show in napari
-    #show(args, image)
-    print('Saving image and image dimension')
-    write(args, file, image)
-    print('DONE!')
-    del image
-    gc.collect()
-    #'''
+  if not args.disable_stitching:
+    for file in files:
+      image = get_images(args, file)
+      # show in napari
+      #show(args, image)
+      print('Saving image and image dimension')
+      write(args, file, image)
+      print('DONE!')
+      del image
+      gc.collect()
+  else:
+    print("No stitching done")
 
   if not args.disable_registration:
     source = args.destination

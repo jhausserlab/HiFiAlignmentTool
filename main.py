@@ -21,6 +21,13 @@ parser.add_argument(
   help='generate image without asking any questions'
 )
 parser.add_argument(
+  '--disable-stitching',
+  action='store_const',
+  const=True,
+  default=False,
+  help='disable stitching of czi file into an image'
+)
+parser.add_argument(
   '--disable-registration',
   action='store_const',
   const=True,
@@ -40,8 +47,8 @@ parser.add_argument(
   metavar ='N', 
   type = float, 
   nargs ='+', 
-  default=[0.2],
-  help ='Scale factor between 0. - 1.') 
+  default=[0.33],
+  help ='Scale factor between 0. - 1. (needs --downscale to work else full resolution)') 
 
 
 args = parser.parse_args()
