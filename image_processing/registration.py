@@ -57,7 +57,7 @@ def get_aligned_images(args, source):
   anti_alias = True
   rescale_fct = 0.25
 
-  if(np.shape(dapi_ref)[0] == i_max && np.shape(dapi_ref)[1] == j_max):
+  if(np.shape(dapi_ref)[0] == i_max and np.shape(dapi_ref)[1] == j_max):
     pad_dapi_ref = dapi_ref
   else:
     print('----------- Images will be padded -----------')
@@ -80,7 +80,7 @@ def get_aligned_images(args, source):
     gc.collect()
 
     print('dapi_mov shape', np.shape(dapi_mov))
-    if(np.shape(dapi_mov)[0] == i_max && np.shape(dapi_mov)[1] == j_max):
+    if(np.shape(dapi_mov)[0] == i_max and np.shape(dapi_mov)[1] == j_max):
       pad_dapi_mov = dapi_mov
     else:
       print('Padding image size to', i_max, j_max)
@@ -127,7 +127,7 @@ def get_aligned_images(args, source):
     aligned_images = []
     channels = np.shape(tif_mov)[0]
     for channel in range(channels):
-      if(np.shape(tif_mov)[1] == i_max && np.shape(tif_mov)[2] == j_max):
+      if(np.shape(tif_mov)[1] == i_max and np.shape(tif_mov)[2] == j_max):
         pad_tif_mov = tif_mov[0,:,:]
       else:
         pad_tif_mov = pad_image(i_max, j_max, tif_mov[0,:,:])
