@@ -74,7 +74,6 @@ def get_aligned_images(args, source):
   gc.collect()
 
   for file in files:
-
     print('--- Aligning tif i:', file.split())
     tif_mov = tifffile.imread(file.split())
     print('Shape of image i is: ', np.shape(tif_mov), 'size', getsizeof(tif_mov)/10**6, 'MB')
@@ -131,16 +130,29 @@ def get_aligned_images(args, source):
     aligned_images = []
     channels = np.shape(tif_mov)[0]
     for channel in range(channels):
-      if(np.shape(tif_mov)[1] == i_max and np.shape(tif_mov)[2] == j_max):
-        pad_tif_mov = tif_mov[0,:,:]
+
+      #To put dapi as first channel in the image
+      if channel == 0:
+        if(np.shape(tif_mov)[1] == i_max and np.shape(tif_mov)[2] == j_max):
+          pad_tif_mov = tif_mov[-1,:,:]
+        else:
+          pad_tif_mov = pad_image(i_max, j_max, tif_mov[-1,:,:])
       else:
-        pad_tif_mov = pad_image(i_max, j_max, tif_mov[0,:,:])
+        if(np.shape(tif_mov)[1] == i_max and np.shape(tif_mov)[2] == j_max):
+          pad_tif_mov = tif_mov[0,:,:]
+        else:
+          pad_tif_mov = pad_image(i_max, j_max, tif_mov[0,:,:])
+
+      #To free memory as we do not need these channels
+      if channel == 0:
+        if np.shape(tif_mov)[0] > 1: 
+          tif_mov = np.delete(tif_mov, -1, axis = 0)
+      else:
+        if np.shape(tif_mov)[0] > 1: 
+          tif_mov = np.delete(tif_mov, 0, axis = 0)
       
       if args.downscale:
         pad_tif_mov = rescale(pad_tif_mov, rescale_fct, anti_aliasing=anti_alias)
-      #To free memory as we do not need these channels
-      if np.shape(tif_mov)[0] > 1: 
-        tif_mov = np.delete(tif_mov, 0, axis = 0)
 
       aligned_images.append(sr.transform(pad_tif_mov))
       print('info -- channel', channel,'aligned')
