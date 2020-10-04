@@ -35,6 +35,14 @@ parser.add_argument(
   help='disable image registration'
 )
 parser.add_argument(
+  '-r',
+  '--removeDapi',
+  action='store_const',
+  const=True,
+  default=False,
+  help='remove alignment channels when saving registered images (except the first one)'
+)
+parser.add_argument(
   '-d',
   '--downscale',
   action='store_const',
@@ -48,7 +56,8 @@ parser.add_argument(
   type = float, 
   nargs ='+', 
   default=[0.33],
-  help ='Scale factor between 0. - 1. (needs --downscale to work else full resolution)') 
+  help ='Scale factor between 0. - 1. (needs --downscale to work else full resolution)'
+) 
 
 
 args = parser.parse_args()

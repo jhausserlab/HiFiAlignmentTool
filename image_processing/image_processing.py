@@ -7,7 +7,7 @@ import napari
 from image_processing.czi import get_images
 from image_processing.registration import get_aligned_images
 from image_processing.registration import get_tiffiles
-from sys import getsizeof # To know the size of the variables in bytes
+from sys import getsizeof
 import gc
 
 def get_files(source):

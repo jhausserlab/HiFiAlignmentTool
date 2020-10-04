@@ -5,7 +5,7 @@ import glob
 import gc
 import sys
 import tifffile
-from sys import getsizeof # To know the size of the variables in bytes
+from sys import getsizeof
 
 def get_tiffiles(source):
   return glob.glob(source + '/**/*.tif', recursive=True)
@@ -73,7 +73,8 @@ def get_aligned_images(args, source):
   del dapi_ref
   gc.collect()
 
-  for file in files:
+  #for file in files:
+  for idx,file in enumerate(files):
     print('--- Aligning tif i:', file.split())
     tif_mov = tifffile.imread(file.split())
     print('Shape of image i is: ', np.shape(tif_mov), 'size', getsizeof(tif_mov)/10**6, 'MB')
@@ -97,27 +98,6 @@ def get_aligned_images(args, source):
 
     print('Getting Transform matrix')
     sr = StackReg(StackReg.RIGID_BODY)
-    """
-    #The code didn't seem to work to register subimages. Better to register the image as a whole
-    #Keeping the code in case we still want to try
-    subimage = False
-    i_size = int(6000*rescale_fct/2)
-    j_size = int(6000*rescale_fct/2)
-    if subimage:
-      # register mov to ref sr.register(ref, mov)
-      # Size of the sub image at the center. (25'000, 20'000) is 1GB size
-
-      ihalf = int(np.floor(i_max*rescale_fct/2))
-      jhalf = int(np.floor(j_max*rescale_fct/2))
-      print('center of image', ihalf, jhalf)
-      print('Taking sub image registration')
-      sr.register(pad_dapi_ref[(ihalf-i_size):(ihalf+i_size), (jhalf-j_size):(jhalf+j_size)],
-                  pad_dapi_mov[(ihalf-i_size):(ihalf+i_size), (jhalf-j_size):(jhalf+j_size)])
-    else:
-      print('Taking full image registration')
-      sr.register(pad_dapi_ref, pad_dapi_mov)
-    """
-    
     sr.register(pad_dapi_ref, pad_dapi_mov)
     print('Registration matrix acquired and now transforming the channels')
 
@@ -144,6 +124,8 @@ def get_aligned_images(args, source):
           pad_tif_mov = pad_image(i_max, j_max, tif_mov[0,:,:])
 
       #To free memory as we do not need these channels
+      #if it was the first iteration, we want dapi as our first registered channel
+      #thus we have dapi to remove (remove last channel), after it is the normal order (remove first channel)
       if channel == 0:
         if np.shape(tif_mov)[0] > 1: 
           tif_mov = np.delete(tif_mov, -1, axis = 0)
@@ -164,6 +146,12 @@ def get_aligned_images(args, source):
 
     del tif_mov
     gc.collect()
+
+    #idx != 0 because we want to the first dapi channel from our reference image and then remove all the other dapis.
+    if args.removeDapi and idx != 0:
+      del aligned_images[0]
+      print('Removed alignment channel', np.shape(aligned_images))
+
 
     print('Saving aligned image')
     with tifffile.TiffWriter('./aligned/'+file.split()[0].split('/')[2].split('.')[0]+'_al.tif',

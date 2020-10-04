@@ -4,7 +4,7 @@ import os
 import pathlib
 import tifffile
 import gc
-from sys import getsizeof # To know the size of the variables in bytes
+from sys import getsizeof
 
 def get_stitched_czis(args, czi):
   #stitches the czi images. It returns a np.array of values.
