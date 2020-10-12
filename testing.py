@@ -24,6 +24,15 @@ from skimage.transform import warp
 from skimage.registration import optical_flow_tvl1
 
 
+def tester():
+  a = np.ones((5000,5000))
+  print(type(a[5,5]), getsizeof(a)/10**6, 'MB')
+  b = np.round(a)
+  print(type(b[5,5]), getsizeof(b)/10**6, 'MB')
+  c = a.astype('int16')
+  print(type(c[5,5]), getsizeof(c)/10**6, 'MB')
+tester()
+
 def get_dapi():
   tif2 = tifffile.imread('./r22_pr.tif')
   tif5 = tifffile.imread('./r25_pr.tif')
@@ -542,5 +551,3 @@ def get_aligned_imagesStackReg():
 
   print('DONE!')
 
-
-get_aligned_imagesStackReg()

@@ -111,7 +111,7 @@ def get_aligned_images(args, source):
     channels = np.shape(tif_mov)[0]
     for channel in range(channels):
 
-      #To put dapi as first channel in the image
+      #To put dapi as first channel in the image and to see if we need padding
       if channel == 0:
         if(np.shape(tif_mov)[1] == i_max and np.shape(tif_mov)[2] == j_max):
           pad_tif_mov = tif_mov[-1,:,:]
@@ -135,11 +135,27 @@ def get_aligned_images(args, source):
       
       if args.downscale:
         pad_tif_mov = rescale(pad_tif_mov, rescale_fct, anti_aliasing=anti_alias)
+      
+      aligned_tif = sr.transform(pad_tif_mov)
+      del pad_tif_mov
+      gc.collect()
+      aligned_tif = np.round(aligned_tif)
+      aligned_tif = aligned_tif.astype(np.uint16)
 
+      aligned_images.append(aligned_tif)
+      print('info -- channel', channel,'aligned')
+      del aligned_tif
+      gc.collect()
+
+      '''
       aligned_images.append(sr.transform(pad_tif_mov))
+      print('mean', np.mean(pad_tif_mov),'median', np.median(pad_tif_mov))
+      print('min', np.min(pad_tif_mov),'max', np.max(pad_tif_mov))
       print('info -- channel', channel,'aligned')
       del pad_tif_mov
       gc.collect()
+      '''
+      
 
     print('Transformed channels done, image is of size', np.shape(aligned_images), 
                                   getsizeof(np.array(aligned_images))/10**6, 'MB')
