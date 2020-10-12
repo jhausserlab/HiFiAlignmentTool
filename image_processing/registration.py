@@ -64,7 +64,7 @@ def get_aligned_images(args, source):
     anti_alias = True
     rescale_fct = args.factor[0]
     print('----- Images will be downscaled',rescale_fct*100,'%  resolution------')
-    pad_dapi_ref = rescale(pad_dapi_ref, rescale_fct, anti_aliasing=anti_alias)
+    pad_dapi_ref = rescale(pad_dapi_ref, rescale_fct, anti_aliasing=anti_alias, preserve_range = True)
     print('dapi_ref rescaled', getsizeof(np.array(pad_dapi_ref))/10**6, 'MB')
   else:
     print('--------------- Keeping full resolution ----------------')
@@ -93,7 +93,7 @@ def get_aligned_images(args, source):
     gc.collect()
 
     if args.downscale:
-      pad_dapi_mov = rescale(pad_dapi_mov, rescale_fct, anti_aliasing=anti_alias)
+      pad_dapi_mov = rescale(pad_dapi_mov, rescale_fct, anti_aliasing=anti_alias, preserve_range = True)
       print('Down scaled the image to', np.shape(pad_dapi_mov), getsizeof(np.array(pad_dapi_mov))/10**6, 'MB')
 
     print('Getting Transform matrix')
@@ -134,7 +134,7 @@ def get_aligned_images(args, source):
           tif_mov = np.delete(tif_mov, 0, axis = 0)
       
       if args.downscale:
-        pad_tif_mov = rescale(pad_tif_mov, rescale_fct, anti_aliasing=anti_alias)
+        pad_tif_mov = rescale(pad_tif_mov, rescale_fct, anti_aliasing=anti_alias, preserve_range = True)
       
       aligned_tif = sr.transform(pad_tif_mov)
       del pad_tif_mov
@@ -143,6 +143,8 @@ def get_aligned_images(args, source):
       aligned_tif = aligned_tif.astype(np.uint16)
 
       aligned_images.append(aligned_tif)
+      #print('mean', np.mean(aligned_tif),'median', np.median(aligned_tif))
+      #print('min', np.min(aligned_tif),'max', np.max(aligned_tif))
       print('info -- channel', channel,'aligned')
       del aligned_tif
       gc.collect()
