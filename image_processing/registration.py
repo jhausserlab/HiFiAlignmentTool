@@ -63,7 +63,7 @@ def get_aligned_images(args, source):
   if args.downscale:
     anti_alias = True
     rescale_fct = args.factor[0]
-    print('------ Images will be downscaled by factor',rescale_fct*100,'% ------')
+    print('----- Images will be downscaled',rescale_fct*100,'%  resolution------')
     pad_dapi_ref = rescale(pad_dapi_ref, rescale_fct, anti_aliasing=anti_alias)
     print('dapi_ref rescaled', getsizeof(np.array(pad_dapi_ref))/10**6, 'MB')
   else:
@@ -154,7 +154,7 @@ def get_aligned_images(args, source):
 
 
     print('Saving aligned image')
-    with tifffile.TiffWriter('./aligned/'+file.split()[0].split('/')[2].split('.')[0]+'_al.tif',
+    with tifffile.TiffWriter('./aligned/'+file.split()[0].split('/')[2].split('.')[0]+'_al.ome.tif',
                                  bigtiff = True) as tif:
       tif.save(np.array(aligned_images))
 

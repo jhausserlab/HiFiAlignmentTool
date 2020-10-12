@@ -48,7 +48,7 @@ def write(args, file, image):
       name_txt = 'image_shape'
       file = f'{os.path.basename(args.destination)}/{name}'
 
-      with tifffile.TiffWriter(file  + '_pr.tif', bigtiff = True) as tif:
+      with tifffile.TiffWriter(file  + '_pr.ome.tif', bigtiff = True) as tif:
         tif.save(image)
 
       with open(f'{os.path.basename(args.destination)}/{name_txt}' + '.txt', 'a') as f:
