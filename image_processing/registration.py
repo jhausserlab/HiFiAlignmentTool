@@ -35,7 +35,7 @@ def pad_image(i_max, j_max, image):
 
   #pads (up, down),(left,right)
   padded_image = np.pad(image,((int(np.floor((i_diff)/2)), int(np.ceil((i_diff)/2)))
-                              ,(int(np.floor((j_diff)/2)), int(np.ceil((j_diff)/2)))),'constant', constant_values = 0)
+                              ,(int(np.floor((j_diff)/2)), int(np.ceil((j_diff)/2)))),'constant')
   return padded_image
 
 def get_aligned_images(args, source):
@@ -75,9 +75,9 @@ def get_aligned_images(args, source):
 
   #for file in files:
   for idx,file in enumerate(files):
-    print('--- Aligning tif i:', file.split())
+    print('--- Aligning tif:', file.split())
     tif_mov = tifffile.imread(file.split())
-    print('Shape of image i is: ', np.shape(tif_mov), 'size', getsizeof(tif_mov)/10**6, 'MB')
+    print('Shape of image is: ', np.shape(tif_mov), 'size', getsizeof(tif_mov)/10**6, 'MB')
     dapi_mov = np.array(tif_mov[-1])
     #delete tif_mov as it is not needed for registration (only need dapi) this is done to free memory.
     del tif_mov
@@ -99,7 +99,7 @@ def get_aligned_images(args, source):
     print('Getting Transform matrix')
     sr = StackReg(StackReg.RIGID_BODY)
     sr.register(pad_dapi_ref, pad_dapi_mov)
-    print('Registration matrix acquired and now transforming the channels')
+    print('Registration matrix acquired and now transforming the channels') # if you want to see the transformation matrix : sr.get_matrix()
 
     del pad_dapi_mov
     gc.collect()
@@ -147,7 +147,7 @@ def get_aligned_images(args, source):
 
       #Due to the registration, some values become negative at the edges (rotation + translation)
       #If I do not correct this, i get white bands as these negative values get converted to maximum values in uint16.
-      #I do equal to 0 as it is background
+      #I do equal to 0 as it is at the edge and can be considered as background
       aligned_tif[aligned_tif <= 0] = 0
       aligned_tif = aligned_tif.astype(np.uint16)
 
@@ -173,11 +173,12 @@ def get_aligned_images(args, source):
     del tif_mov
     gc.collect()
 
+    ''' #Not needed anymore
     #idx != 0 because we want to the first dapi channel from our reference image and then remove all the other dapis.
     if args.removeDapi and idx != 0:
       del aligned_images[0]
       print('Removed alignment channel', np.shape(aligned_images))
-
+    '''
 
     print('Saving aligned image')
     with tifffile.TiffWriter('./aligned/'+file.split()[0].split('/')[2].split('.')[0]+'_al.ome.tif',
@@ -188,6 +189,31 @@ def get_aligned_images(args, source):
     gc.collect()
 
   print('DONE! All images are registered')
+
+def final_image(source):
+  files = get_tiffiles(source)
+  tif = tifffile.imread(files[0].split())
+
+  final_image = tif
+  print('Adding first image:', files[0].split() ,np.shape(final_image))
+
+  for idx in range(len(files)-1):
+    print('--- Adding:', files[idx+1].split())
+    tif = tifffile.imread(files[idx+1].split())
+    print('Tif shape', np.shape(tif))
+    #idx != 0 because we want to the first dapi channel from our reference image and then remove all the other dapis.
+    tif = np.delete(tif, 0, 0)
+    print('Removed alignment channel', np.shape(tif))
+
+    final_image = np.append(final_image, tif, axis = 0)
+    print(np.shape(final_image))
+    print('Image size: ', getsizeof(np.array(final_image))/10**6, 'MB')
+
+  print('Final image size: ',np.shape(final_image), getsizeof(np.array(final_image))/10**6, 'MB')
+  print('Saving aligned image')
+  with tifffile.TiffWriter('./final_image.ome.tif', bigtiff = True) as tif:
+    tif.save(np.array(final_image))
+  print('Final image saved!')
 
 ##### The functions below are not needed anymore
 from skimage.registration import phase_cross_correlation # new form of register_translation

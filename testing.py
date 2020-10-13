@@ -43,19 +43,47 @@ def get_dapi():
 def get_tiffiles(source):
   return sorted(glob.glob(source + '/**/*.tif', recursive=True))
 
+def final_image(source):
+  files = get_tiffiles(source)
+  tif = tifffile.imread(files[0].split())
+
+  final_image = tif
+  print('Adding first image:', files[0].split() ,np.shape(final_image))
+
+  for idx in range(len(files)-1):
+    print('--- Adding:', files[idx+1].split())
+    tif = tifffile.imread(files[idx+1].split())
+    print('Tif shape', np.shape(tif))
+    #idx != 0 because we want to the first dapi channel from our reference image and then remove all the other dapis.
+    tif = np.delete(tif, 0, 0)
+    print('Removed alignment channel', np.shape(tif))
+
+    final_image = np.append(final_image, tif, axis = 0)
+    print(np.shape(final_image))
+    print('Image size: ', getsizeof(np.array(final_image))/10**6, 'MB')
+
+  print('Final image size: ',np.shape(final_image), getsizeof(np.array(final_image))/10**6, 'MB')
+  print('Saving aligned image')
+  with tifffile.TiffWriter('./final_image.ome.tif', bigtiff = True) as tif:
+    tif.save(np.array(final_image))
+  print('Final image saved!')
+
+source = 'aligned'
+final_image()
 
 def giga_image():
   source = 'aligned'
   files = get_tiffiles(source)
   print('--- First tif i:', files[0].split())
+  print('------------- ',len(files))
   tif = tifffile.imread(files[0].split())
 
   final_image = np.ones((1, np.shape(tif)[1], np.shape(tif)[2]), dtype = np.uint16)
   print(np.shape(final_image))
 
-  for file in files:
-    print('--- Adding tif i:', file.split())
-    tif = tifffile.imread(file.split())
+  for idx in range(len(files)-1):
+    print('--- Adding:', files[idx+1].split())
+    tif = tifffile.imread(files[idx+1].split())
     final_image = np.append(final_image, tif, axis = 0)
     print(np.shape(final_image))
     print('Final image size: ', getsizeof(np.array(final_image))/10**6, 'MB')
@@ -67,7 +95,6 @@ def giga_image():
   with tifffile.TiffWriter('./imageFINAL.ome.tif', bigtiff = True) as tif:
     tif.save(np.array(final_image))
   print('Final image saved!')
-giga_image()
 
 def get_max_shape(source):
   

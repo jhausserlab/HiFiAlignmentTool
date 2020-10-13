@@ -34,6 +34,7 @@ parser.add_argument(
   default=False,
   help='disable image registration'
 )
+''' Not needed, implemented in th final image
 parser.add_argument(
   '-r',
   '--removeDapi',
@@ -42,6 +43,7 @@ parser.add_argument(
   default=False,
   help='remove alignment channels when saving registered images (except the first one)'
 )
+'''
 parser.add_argument(
   '-d',
   '--downscale',
@@ -58,7 +60,13 @@ parser.add_argument(
   default=[0.33],
   help ='Scale factor between 0. - 1. (needs --downscale to work else full resolution)'
 ) 
-
+parser.add_argument(
+  '--finalimage',
+  action='store_const',
+  const=True,
+  default=False,
+  help='Saves all the channels into one image and removes all dapis except from the first image'
+)
 
 args = parser.parse_args()
 

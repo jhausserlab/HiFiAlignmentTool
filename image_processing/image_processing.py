@@ -7,6 +7,7 @@ import napari
 from image_processing.czi import get_images
 from image_processing.registration import get_aligned_images
 from image_processing.registration import get_tiffiles
+from image_processing.registration import final_image
 from sys import getsizeof
 import gc
 
@@ -79,7 +80,7 @@ def run(args):
       del image
       gc.collect()
   else:
-    print("No stitching done")
+    print("----- No stitching done -----")
 
   if not args.disable_registration:
     source = args.destination
@@ -90,5 +91,17 @@ def run(args):
 
     get_aligned_images(args, source)
   else:
-    print("Image not registered")
-    exit()
+    print("----- Image not registered -----")
+
+  if args.finalimage:
+    source = 'aligned'
+    list_files(source,get_tiffiles(source))
+
+    if not args.yes:
+      ask_for_approval()
+
+    final_image(source)
+  else:
+    print("----- No final image saved -----")
+
+
