@@ -11,7 +11,7 @@ from sys import getsizeof
 import gc
 
 def get_files(source):
-  return glob.glob(source + '/**/*.czi', recursive=True)
+  return sorted(glob.glob(source + '/**/*.czi', recursive=True))
 
 def list_files(source, files):
   file_names = '\n'.join(files)

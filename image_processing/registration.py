@@ -8,7 +8,7 @@ import tifffile
 from sys import getsizeof
 
 def get_tiffiles(source):
-  return glob.glob(source + '/**/*.tif', recursive=True)
+  return sorted(glob.glob(source + '/**/*.tif', recursive=True))
 
 def get_max_shape(source):
   
@@ -35,7 +35,7 @@ def pad_image(i_max, j_max, image):
 
   #pads (up, down),(left,right)
   padded_image = np.pad(image,((int(np.floor((i_diff)/2)), int(np.ceil((i_diff)/2)))
-                              ,(int(np.floor((j_diff)/2)), int(np.ceil((j_diff)/2)))),'constant')
+                              ,(int(np.floor((j_diff)/2)), int(np.ceil((j_diff)/2)))),'constant', constant_values = 0)
   return padded_image
 
 def get_aligned_images(args, source):
@@ -139,7 +139,16 @@ def get_aligned_images(args, source):
       aligned_tif = sr.transform(pad_tif_mov)
       del pad_tif_mov
       gc.collect()
-      aligned_tif = np.round(aligned_tif)
+
+      # np.round is not needed as the values can go to magnitude 10^4 so rounding to the closest int
+      # is a computing process that is not bringing any value to the process (eg rounding 1000.7 to 1001)
+      # ---> doing astype(uint16) troncatenates the values (eg 1000.7 to 1000)
+      #aligned_tif = np.round(aligned_tif)
+
+      #Due to the registration, some values become negative at the edges (rotation + translation)
+      #If I do not correct this, i get white bands as these negative values get converted to maximum values in uint16.
+      #I do equal to 0 as it is background
+      aligned_tif[aligned_tif <= 0] = 0
       aligned_tif = aligned_tif.astype(np.uint16)
 
       aligned_images.append(aligned_tif)
@@ -157,7 +166,6 @@ def get_aligned_images(args, source):
       del pad_tif_mov
       gc.collect()
       '''
-      
 
     print('Transformed channels done, image is of size', np.shape(aligned_images), 
                                   getsizeof(np.array(aligned_images))/10**6, 'MB')

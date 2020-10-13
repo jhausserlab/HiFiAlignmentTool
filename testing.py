@@ -23,16 +23,6 @@ from skimage.feature import ORB, match_descriptors
 from skimage.transform import warp
 from skimage.registration import optical_flow_tvl1
 
-
-def tester():
-  a = np.ones((5000,5000))
-  print(type(a[5,5]), getsizeof(a)/10**6, 'MB')
-  b = np.round(a)
-  print(type(b[5,5]), getsizeof(b)/10**6, 'MB')
-  c = a.astype('int16')
-  print(type(c[5,5]), getsizeof(c)/10**6, 'MB')
-tester()
-
 def get_dapi():
   tif2 = tifffile.imread('./r22_pr.tif')
   tif5 = tifffile.imread('./r25_pr.tif')
@@ -51,7 +41,33 @@ def get_dapi():
   return print('HAHA')
 
 def get_tiffiles(source):
-  return glob.glob(source + '/**/*.tif', recursive=True)
+  return sorted(glob.glob(source + '/**/*.tif', recursive=True))
+
+
+def giga_image():
+  source = 'aligned'
+  files = get_tiffiles(source)
+  print('--- First tif i:', files[0].split())
+  tif = tifffile.imread(files[0].split())
+
+  final_image = np.ones((1, np.shape(tif)[1], np.shape(tif)[2]), dtype = np.uint16)
+  print(np.shape(final_image))
+
+  for file in files:
+    print('--- Adding tif i:', file.split())
+    tif = tifffile.imread(file.split())
+    final_image = np.append(final_image, tif, axis = 0)
+    print(np.shape(final_image))
+    print('Final image size: ', getsizeof(np.array(final_image))/10**6, 'MB')
+
+  final_image = np.delete(final_image, 0, 0)
+  print(np.shape(final_image))
+  print('Final image size: ', getsizeof(np.array(final_image))/10**6, 'MB')
+  print('Saving aligned image')
+  with tifffile.TiffWriter('./imageFINAL.ome.tif', bigtiff = True) as tif:
+    tif.save(np.array(final_image))
+  print('Final image saved!')
+giga_image()
 
 def get_max_shape(source):
   
@@ -320,7 +336,7 @@ def get_dapi_alignedOF():
 
   print('DONE!')
 
-#import cv2 
+#import cv2  DOESNT WORK
 def get_dapi_alignedOpenCV():
   print('DOING openCV!')
   source = 'output'
