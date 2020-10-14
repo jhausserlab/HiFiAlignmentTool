@@ -73,7 +73,6 @@ def get_aligned_images(args, source):
   del dapi_ref
   gc.collect()
 
-  #for file in files:
   for idx,file in enumerate(files):
     print('--- Aligning tif:', file.split())
     tif_mov = tifffile.imread(file.split())
@@ -99,7 +98,8 @@ def get_aligned_images(args, source):
     print('Getting Transform matrix')
     sr = StackReg(StackReg.RIGID_BODY)
     sr.register(pad_dapi_ref, pad_dapi_mov)
-    print('Registration matrix acquired and now transforming the channels') # if you want to see the transformation matrix : sr.get_matrix()
+    print('Registration matrix acquired and now transforming the channels') 
+    # if you want to see the transformation matrix : sr.get_matrix()
 
     del pad_dapi_mov
     gc.collect()
@@ -140,28 +140,20 @@ def get_aligned_images(args, source):
       del pad_tif_mov
       gc.collect()
 
-      # np.round is not needed as the values can go to magnitude 10^4 so rounding to the closest int
-      # is a computing process that is not bringing any value to the process (eg rounding 1000.7 to 1001)
-      # ---> doing astype(uint16) troncatenates the values (eg 1000.7 to 1000)
-      #aligned_tif = np.round(aligned_tif)
-
       #Due to the registration, some values become negative at the edges (rotation + translation)
       #If I do not correct this, i get white bands as these negative values get converted to maximum values in uint16.
       #I do equal to 0 as it is at the edge and can be considered as background
       aligned_tif[aligned_tif <= 0] = 0
+      #when converting to uint, it troncatenates the values (eg 1000.7 -> 1000)
       aligned_tif = aligned_tif.astype(np.uint16)
 
       aligned_images.append(aligned_tif)
-      #print('mean', np.mean(aligned_tif),'median', np.median(aligned_tif))
-      #print('min', np.min(aligned_tif),'max', np.max(aligned_tif))
       print('info -- channel', channel,'aligned')
       del aligned_tif
       gc.collect()
 
       '''
       aligned_images.append(sr.transform(pad_tif_mov))
-      print('mean', np.mean(pad_tif_mov),'median', np.median(pad_tif_mov))
-      print('min', np.min(pad_tif_mov),'max', np.max(pad_tif_mov))
       print('info -- channel', channel,'aligned')
       del pad_tif_mov
       gc.collect()
@@ -172,13 +164,6 @@ def get_aligned_images(args, source):
 
     del tif_mov
     gc.collect()
-
-    ''' #Not needed anymore
-    #idx != 0 because we want to the first dapi channel from our reference image and then remove all the other dapis.
-    if args.removeDapi and idx != 0:
-      del aligned_images[0]
-      print('Removed alignment channel', np.shape(aligned_images))
-    '''
 
     print('Saving aligned image')
     with tifffile.TiffWriter('./aligned/'+file.split()[0].split('/')[2].split('.')[0]+'_al.ome.tif',
@@ -201,7 +186,6 @@ def final_image(source):
     print('--- Adding:', files[idx+1].split())
     tif = tifffile.imread(files[idx+1].split())
     print('Tif shape', np.shape(tif))
-    #idx != 0 because we want to the first dapi channel from our reference image and then remove all the other dapis.
     tif = np.delete(tif, 0, 0)
     print('Removed alignment channel', np.shape(tif))
 
@@ -210,7 +194,6 @@ def final_image(source):
     print('Image size: ', getsizeof(np.array(final_image))/10**6, 'MB')
 
   print('Final image size: ',np.shape(final_image), getsizeof(np.array(final_image))/10**6, 'MB')
-  print('Saving aligned image')
   with tifffile.TiffWriter('./final_image.ome.tif', bigtiff = True) as tif:
     tif.save(np.array(final_image))
   print('Final image saved!')
@@ -414,57 +397,3 @@ def get_aligned_images_V0(args, source):
     gc.collect()
 
   print('DONE! All images are registered')
-
-def align_images(i_max, j_max, shifted, tif_mov):
-
-  aligned_images = []
-
-  for channel in range(np.shape(tif_mov)[0]):
-    pad_tif_mov = pad_image(i_max, j_max, tif_mov[channel,:,:])
-    print('Done Recalibrating channel', channel)
-    aligned_images.append(shift(pad_tif_mov, shift=(shifted[0], shifted[1]), mode='constant'))
-    print('channel', channel,'aligned')
-    del pad_tif_mov
-    gc.collect()
-
-  print('Transformed channels done, image is of size', np.shape(aligned_images), getsizeof(np.array(aligned_images))/10**6)
-  return np.array(aligned_images)
-
-def get_shift(i_max, j_max, dapi_ref, dapi_mov):
-  print('dapi_ref shape', np.shape(dapi_ref))
-  print('dapi_mov shape', np.shape(dapi_mov))
-
-
-  print('Recalibrating image size to', i_max, j_max)
-  pad_dapi_ref = pad_image(i_max, j_max, dapi_ref)
-  print('DONE, for dapi target (size in MB)', getsizeof(pad_dapi_ref)/10**6)
-  #padding of dapi_mov
-  pad_dapi_mov = pad_image(i_max, j_max, dapi_mov)
-  print('DONE, for dapi offset')
-
-  del dapi_ref
-  del dapi_mov
-  gc.collect()
-
-  print('Getting Transform matrix')
-  # Size of the sub image at the center. (25'000, 20'000) is 1GB size
-  i_size = int(3000/2)
-  j_size = int(2000/2)
-
-  ihalf = int(np.floor(i_max/2))
-  jhalf = int(np.floor(j_max/2))
-  print('center of image', ihalf, jhalf)
-
-  shifted, error, diffphase = phase_cross_correlation(pad_dapi_ref[(ihalf-i_size):(ihalf+i_size), (jhalf-j_size):(jhalf+j_size)],
-                                                   pad_dapi_mov[(ihalf-i_size):(ihalf+i_size), (jhalf-j_size):(jhalf+j_size)])
-  print(f"Detected subpixel offset (y, x): {shifted}")
-
-  #Full image alignment
-  #shifted, error, diffphase = phase_cross_correlation(pad_dapi_ref, pad_dapi_mov)
-  #print(f"Detected subpixel offset Original (y, x): {shifted}")
-
-  del pad_dapi_ref
-  del pad_dapi_mov
-  gc.collect()
-
-  return shifte

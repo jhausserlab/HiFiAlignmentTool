@@ -34,16 +34,6 @@ parser.add_argument(
   default=False,
   help='disable image registration'
 )
-''' Not needed, implemented in th final image
-parser.add_argument(
-  '-r',
-  '--removeDapi',
-  action='store_const',
-  const=True,
-  default=False,
-  help='remove alignment channels when saving registered images (except the first one)'
-)
-'''
 parser.add_argument(
   '-d',
   '--downscale',
