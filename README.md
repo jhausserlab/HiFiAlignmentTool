@@ -11,7 +11,7 @@ From the folder where you are launching the code, you need to have:
 
 Here is how your folder should look like where you run the code:
 
-<img src="structure.png"  width="700" height="500">
+<img src="structure.png"  width="400" height="300">
 
 **WARNING:** If you are running a new set of czi, it is important that the conditions previously mentioned are met (meaning output folder is empty and the czi folder has only the czis you want to process). Else all files will be read.
 
@@ -20,9 +20,9 @@ I recommend these dimensions (give or take 1000 pixels) if you are using a 64GB 
 
 **WARNING 2:** It is important that in your CZI files the reference channel (in our case dapi) is the last channel of your image stack.
 
-To run main.py you need to run at least the 2 arguments "source" and "destination":
+To run main.py you need to run at least the 2 arguments "source" and "destination" (with the example of the structure in the image):
 ```
-python3 main.py ./path/to/source ./destination
+python3 main.py ./czi ./stitched
 ```
 main.py has also 6 optional arguments:
 1. -y, --yes --> runs the code without asking questions before stitching and before registration
