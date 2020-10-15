@@ -1,12 +1,15 @@
 import glob
 import numpy as np
-import time
-from datetime import timedelta
-from image_processing.czi import show, write
-from image_processing.process import get_images
+import os
+import tifffile
+import pathlib
+from image_processing.czi import get_images
+from image_processing.registration import get_aligned_images, get_tiffiles, final_image
+from sys import getsizeof
+import gc
 
 def get_files(source):
-  return glob.glob(source + '/**/*.czi', recursive=True)
+  return sorted(glob.glob(source + '/**/*.czi', recursive=True))
 
 def list_files(source, files):
   file_names = '\n'.join(files)
@@ -19,7 +22,6 @@ def ask_for_approval():
 
   while not hasApproval:
     user_input = input('Continue with image processing for the above files? (Yes/No): ').strip().lower()
-
     if user_input == 'yes' or user_input == 'y':
       hasApproval = True
     elif user_input == 'no' or user_input == 'n':
@@ -28,24 +30,64 @@ def ask_for_approval():
     else:
       print('Please enter a valid option.')
 
-def run(args):
-  if args.time: run_time = time.monotonic()
+def write(args, file, image):
+  #saves a txt file with the images dimensions (C,X,Y) to know if padding will be required during registration
+  #saves the stitched image in the destination file
+  if args.destination:
+    if os.path.exists(args.destination):
+      name = file.split('.')[1].split('/')[2]
+      name_txt = 'image_shape'
+      file = f'{os.path.basename(args.destination)}/{name}'
 
+      with tifffile.TiffWriter(file  + '_pr.ome.tif', bigtiff = True) as tif:
+        tif.save(image)
+
+      with open(f'{os.path.basename(args.destination)}/{name_txt}' + '.txt', 'a') as f:
+        #Save dimension C X Y for processing when we want to register
+        f.write(str(np.shape(image)[0])+','+str(np.shape(image)[1])+','+str(np.shape(image)[2])+';')
+    else:
+      print('destination path does not exist')
+
+def run(args):
+  #runs the different steps of the code: - stiching - registration - save all in one image
   source = args.source
   files = get_files(source)
-
   list_files(source, files)
 
   if not args.yes:
     ask_for_approval()
 
-  images = get_images(args, files)
+  if not args.disable_stitching:
+    for file in files:
+      image = get_images(args, file)
+      print('Saving image and image dimension')
+      write(args, file, image)
+      print('DONE!')
+      del image
+      gc.collect()
+  else:
+    print("----- No stitching done -----")
 
-  print('np.shape', np.shape(images))
-  print('type', type(images))
+  if not args.disable_registration:
+    source = args.destination
+    list_files(source,get_tiffiles(source))
 
-  # show in napaari
-  show(args, images)
-  # write(args, images)
+    if not args.yes:
+      ask_for_approval()
 
-  if args.time: print(timedelta(seconds=time.monotonic() - run_time))
+    get_aligned_images(args, source)
+  else:
+    print("----- Image not registered -----")
+
+  if args.finalimage:
+    source = 'aligned'
+    list_files(source,get_tiffiles(source))
+
+    if not args.yes:
+      ask_for_approval()
+
+    final_image(source)
+  else:
+    print("----- No final image saved -----")
+
+
