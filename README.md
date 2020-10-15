@@ -14,6 +14,17 @@ Here is how your folder should look like where you run the code:
   <img src="structure.png"  width="400" height="300">
 </p>
 
+If you have downloaded the folder from Github, you should have the same structure as the image above (with the addition of a couple of files that should be removed).
+
+**Please remove the following files as they are not needed for the code**:
+
+- **README.md**
+- **structure.png**
+- ./czi/**empty.txt**
+- ./aligned/**empty.txt**
+- ./stitched/**image_shape.txt**
+
+
 **WARNING:** If you are running a new set of czi, it is important that the conditions previously mentioned are met (meaning output folder is empty and the czi folder has only the czis you want to process). Else all files will be read.
 
 Currently, for images of dimension 16'000 x 21'000 pixels the computer uses a maximum of 52GB to run all the code.
@@ -39,14 +50,14 @@ python3 main.py --help
 ```
 
 ## What does the code do
-STITCHING
+**STITCHING**
 1. Load the czi file paths
 2. Take one czi file and stitch the image
 3. Save the dimensions of the image in a txt file called "images_shape.txt" in the "destination" folder(at the start the .txt should not exist and the program will create it)
 4. Save the stitched image in the "destination" folder
 5. Restart from step 2 for the next czi file.
 
-IMAGE REGISTRATION
+**IMAGE REGISTRATION**
 1. Load the first image in the list which will be used as the reference
 2. Extract last channel which is used to align (in our case DAPI)
 3. Delete other channels
@@ -58,7 +69,7 @@ IMAGE REGISTRATION
 9. Save the registered images into the folder aligned.
 10. Restart from step 4. with the next image
 
-FINAL IMAGE
+**FINAL IMAGE**
 1. Loads the first image into an array
 2. Loads the next image and removes dapi
 3. Repeat step 2 until the end
