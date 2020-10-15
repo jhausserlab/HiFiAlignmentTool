@@ -14,9 +14,7 @@ WARNING: If you are running a new set of czi, it is important that the condition
 Currently, for images of dimension 16'000 x 21'000 pixels the computer uses a maximum of 52GB to run all the code.
 I recommend these dimensions (give or take 1000 pixels) if you are using a 64GB RAM computer. 
 
-```
-It is important that in your CZI files the reference channel (in our case dapi) is the last channel of your image stack.
-```
+WARNING 2: It is important that in your CZI files the reference channel (in our case dapi) is the last channel of your image stack.
 
 To run main.py you need to run at least the 2 arguments "source" and "destination":
 ```
