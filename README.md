@@ -1,17 +1,29 @@
 # Microscopy Image Processing
 
-Prototype to register czi microscopy images.
-This code is optimised at a memory level to be able to stitch and register high resolution images in ome.tif.
+Prototype to register czi microscopy images with **python 3**.
+This code is optimised at a memory level to be able to stitch and register high resolution images in **ome.tif**.
 
 ## Getting started
-From the folder where you are launching the code, you need to have:
-- a folder with the czi files that you want to process (which will be the "source")
-- an EMPTY output folder (where stitched images and image dimension will be save, it will be the "destination")
-- an EMPTY folder called "aligned" (where registered images will be saved).
+
+Download the folder from Github and from the **terminal**, access that folder.
+
+To install the required librairies for the code, you can run:
+
+```
+python3 installLib.py
+```
+
+This installs all the librairies that you require for the process (via pip, which is built-in by default with python3). 
+After having done so, you can remove this script if desired.
+
+From the folder where you are launching the code, you will have:
+- a folder **czi**, where the czi files that you want to process will be stored (which will be the "source")
+- an EMPTY folder called **stitched** (where stitched images and image dimension will be save, it will be the "destination")
+- an EMPTY folder called **aligned** (where registered images will be saved).
 
 Here is how your folder should look like where you run the code:
 <p align="center">
-  <img src="structure.png"  width="400" height="300">
+  <img src="structure.png"  width="500" height="300">
 </p>
 
 If you have downloaded the folder from Github, you should have the same structure as the image above (with the addition of a couple of files that should be removed).
@@ -25,14 +37,14 @@ If you have downloaded the folder from Github, you should have the same structur
 - ./stitched/**image_shape.txt**
 
 
-**WARNING:** If you are running a new set of czi, it is important that the conditions previously mentioned are met (meaning output folder is empty and the czi folder has only the czis you want to process). Else all files will be read.
+**WARNING:** If you are running a new set of czi, it is important that the conditions previously mentioned are met (meaning: stitched folder is empty, aligned folder is empty and czi folder has only the czis you want to process). Else "old" files will be read with the new ones.
 
 Currently, for images of dimension 16'000 x 21'000 pixels the computer uses a maximum of 52GB to run all the code.
 I recommend these dimensions (give or take 1000 pixels) if you are using a 64GB RAM computer. 
 
 **WARNING 2:** It is important that in your CZI files the reference channel (in our case dapi) is the last channel of your image stack.
 
-To run main.py you need to run at least the 2 arguments "source" and "destination" (with the example of the structure in the image):
+To run main.py you need to run at least the 2 arguments "source" and "destination" (with the example of the structure in the image, which is what you downloaded):
 ```
 python3 main.py ./czi ./stitched
 ```
