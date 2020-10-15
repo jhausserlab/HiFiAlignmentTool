@@ -7,25 +7,28 @@ This code is optimised at a memory level to be able to stitch and register high 
 From the folder where you are launching the code, you need to have:
 - a folder with the czi files that you want to process (which will be the "source")
 - an EMPTY output folder (where stitched images and image dimension will be save, it will be the "destination")
-- a folder called aligned (where registered images will be saved).
+- an EMPTY folder called "aligned" (where registered images will be saved).
 
-If you are running a new set of czi, it is important that the conditions previously mentioned are met (meaning output file is empty and the czi file has only the files you want to process). Else all files will be read.
+WARNING: If you are running a new set of czi, it is important that the conditions previously mentioned are met (meaning output folder is empty and the czi folder has only the czis you want to process). Else all files will be read.
 
-Currently, for an image of dimension 16'000 x 21'000 pixels the computer uses a maximum of 52GB to run all the code.
+Currently, for images of dimension 16'000 x 21'000 pixels the computer uses a maximum of 52GB to run all the code.
+I recommend these dimensions (give or take 1000 pixels) if you are using a 64GB RAM computer. 
 
-WARNING: It is important that in your CZI files the reference channel (in our case dapi) is the last channel of your image stack.
+```
+It is important that in your CZI files the reference channel (in our case dapi) is the last channel of your image stack.
+```
 
 To run main.py you need to run at least the 2 arguments "source" and "destination":
 ```
-python3 main.py ./path/to/czi_files ./output_folder
+python3 main.py ./path/to/source ./destination
 ```
-main.py has also 5 optional arguments:
+main.py has also 6 optional arguments:
 1. -y, --yes --> runs the code without asking questions before stitching and before registration
-2. --disable-stitching --> if you want to only register
-3. --disable-registration --> if you want to only stitch
-3. -r --removeDapi --> if you want to remove the dapi channels from registered image (except for the dapi used as reference for alignment)
-4. -d, --downscale --> if you want to reduce the resolution of your image (default is 0.33)
-5. --factor 0.XX --> the downscale factor you want between 0 and 1 ( --downscale is required else it is full resolution that is done)
+2. --disable-stitching --> if you want to only stitch
+3. --disable-registration --> if you want to only do image registeration
+4. -d, --downscale --> if you want to reduce the resolution of your image (default is 0.33) if you image is too big.
+5. --factor 0.XX --> the downscale factor you want between 0 and 1 ( the argument --downscale is required else it is full resolution that is done)
+6. --finalimage --> if you want to save the final image containing all the channels without dapis except for the dapi used as reference for registration
 
 if you want more information on the arguments run
 ```
@@ -46,11 +49,16 @@ IMAGE REGISTRATION
 3. Delete other channels
 4. Load the next image i and extract last channel used to align (delete other channels)
 5. Pad if needed
-6. Rescale if asked in command line (0.33 factor by default)
+6. Rescale if asked in command line
 7. Do image registration on dapi_ref and dapi_i using pystackreg library
 8. Transform the other channels of image i with the known transformation
-9. Remove the dapi channel (if not the reference image) if asked
-10. Save the registered images into the folder aligned.
-11. Restart from step 4. with the next image
+9. Save the registered images into the folder aligned.
+10. Restart from step 4. with the next image
+
+FINAL IMAGE
+1. Loads the first image into an array
+2. Loads the next image and removes dapi
+3. Repeat step 2 until the end
+4. Final image is saved in the main folder where you run the code.
 
 
