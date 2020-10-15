@@ -1,7 +1,7 @@
 # Microscopy Image Processing
 
 Prototype to register czi microscopy images.
-This code is optimised at a memory level to be able to stitch and register high resolution images.
+This code is optimised at a memory level to be able to stitch and register high resolution images in ome.tif.
 
 ## Getting started
 From the folder where you are launching the code, you need to have:
@@ -57,7 +57,7 @@ It is important to note that the loading of the file paths are done in alphanume
 1. Load the czi file paths
 2. Take one czi file and stitch the image
 3. Save the dimensions of the image in a txt file called "images_shape.txt" in the "destination" folder(at the start the .txt should not exist and the program will create it)
-4. Save the stitched image in the "destination" folder
+4. Save the stitched image in ome.tif in the "destination" folder
 5. Restart from step 2 for the next czi file.
 
 **IMAGE REGISTRATION**
@@ -69,13 +69,13 @@ It is important to note that the loading of the file paths are done in alphanume
 6. Rescale if asked in command line
 7. Do image registration on dapi_ref and dapi_i using pystackreg library
 8. Transform the other channels of image i with the known transformation
-9. Save the registered images into the folder aligned.
+9. Save the registered images in ome.tif into the folder aligned.
 10. Restart from step 4. with the next image
 
 **FINAL IMAGE**
 1. Loads the first image into an array
 2. Loads the next image and removes dapi
 3. Repeat step 2 until the end
-4. Final image is saved in the main folder where you run the code.
+4. Final image is saved in ome.tif in the main folder where you run the code.
 
 
