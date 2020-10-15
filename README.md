@@ -3,6 +3,9 @@
 Prototype to register czi microscopy images with **python 3**.
 This code is optimised at a memory level to be able to stitch and register high resolution images in **ome.tif**.
 
+Currently, for images of dimension 16'000 x 21'000 pixels the computer uses a maximum of 52GB to run all the code.
+I recommend these dimensions (give or take ~1000 pixels) if you are using a 64GB RAM computer. 
+
 ## Getting started
 
 Download the folder from Github.
@@ -40,9 +43,6 @@ If you have downloaded the folder from Github, you should have the same structur
 
 
 **WARNING:** If you are running a new set of czi, it is important that the conditions previously mentioned are met (meaning: stitched folder is empty, aligned folder is empty and czi folder has only the czis you want to process). Else "old" files will be read with the new ones.
-
-Currently, for images of dimension 16'000 x 21'000 pixels the computer uses a maximum of 52GB to run all the code.
-I recommend these dimensions (give or take 1000 pixels) if you are using a 64GB RAM computer. 
 
 **WARNING 2:** It is important that in your CZI files the reference channel (in our case dapi) is the last channel of your image stack.
 
