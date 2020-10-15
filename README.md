@@ -50,6 +50,9 @@ python3 main.py --help
 ```
 
 ## What does the code do
+
+It is important to note that the loading of the file paths are done in alphanumerical order. So if you have over 9 rounds of images counting 1,2,...,10; 10 could be used first. To avoid this problem, the numbers should be written 01,02,...10. Like this the order will be alphanumerically.
+
 **STITCHING**
 1. Load the czi file paths
 2. Take one czi file and stitch the image
