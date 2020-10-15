@@ -9,12 +9,15 @@ From the folder where you are launching the code, you need to have:
 - an EMPTY output folder (where stitched images and image dimension will be save, it will be the "destination")
 - an EMPTY folder called "aligned" (where registered images will be saved).
 
-WARNING: If you are running a new set of czi, it is important that the conditions previously mentioned are met (meaning output folder is empty and the czi folder has only the czis you want to process). Else all files will be read.
+Here is how your folder should look like where you run the code:
+![Folder structure](strcture.png)
+
+**WARNING:** If you are running a new set of czi, it is important that the conditions previously mentioned are met (meaning output folder is empty and the czi folder has only the czis you want to process). Else all files will be read.
 
 Currently, for images of dimension 16'000 x 21'000 pixels the computer uses a maximum of 52GB to run all the code.
 I recommend these dimensions (give or take 1000 pixels) if you are using a 64GB RAM computer. 
 
-WARNING 2: It is important that in your CZI files the reference channel (in our case dapi) is the last channel of your image stack.
+**WARNING 2:** It is important that in your CZI files the reference channel (in our case dapi) is the last channel of your image stack.
 
 To run main.py you need to run at least the 2 arguments "source" and "destination":
 ```
