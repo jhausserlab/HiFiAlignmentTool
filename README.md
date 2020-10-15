@@ -5,9 +5,11 @@ This code is optimised at a memory level to be able to stitch and register high 
 
 ## Getting started
 
-Download the folder from Github and from the **terminal**, access that folder.
+Download the folder from Github.
 
-To install the required librairies for the code, you can run:
+From the **terminal**, access that folder using **cd** to arrive to that file path, as it will be used as the working directory.
+
+To install the required librairies for the code, you can run in the terminal in that folder:
 
 ```
 python3 installLib.py
