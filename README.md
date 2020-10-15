@@ -10,8 +10,9 @@ From the folder where you are launching the code, you need to have:
 - an EMPTY folder called "aligned" (where registered images will be saved).
 
 Here is how your folder should look like where you run the code:
-
-<img src="structure.png"  width="400" height="300">
+<p align="center">
+  <img src="structure.png"  width="400" height="300">
+</p>
 
 **WARNING:** If you are running a new set of czi, it is important that the conditions previously mentioned are met (meaning output folder is empty and the czi folder has only the czis you want to process). Else all files will be read.
 
