@@ -3,11 +3,8 @@ import numpy as np
 import os
 import tifffile
 import pathlib
-import napari
 from image_processing.czi import get_images
-from image_processing.registration import get_aligned_images
-from image_processing.registration import get_tiffiles
-from image_processing.registration import final_image
+from image_processing.registration import get_aligned_images, get_tiffiles, final_image
 from sys import getsizeof
 import gc
 
@@ -25,7 +22,6 @@ def ask_for_approval():
 
   while not hasApproval:
     user_input = input('Continue with image processing for the above files? (Yes/No): ').strip().lower()
-
     if user_input == 'yes' or user_input == 'y':
       hasApproval = True
     elif user_input == 'no' or user_input == 'n':
@@ -34,15 +30,9 @@ def ask_for_approval():
     else:
       print('Please enter a valid option.')
 
-def show(args, images):
-  if not args.yes:
-    with napari.gui_qt():
-      viewer = napari.Viewer()
-      for czi in images:
-        viewer.add_image(np.array(czi))
-
 def write(args, file, image):
-
+  #saves a txt file with the images dimensions (C,X,Y) to know if padding will be required during registration
+  #saves the stitched image in the destination file
   if args.destination:
     if os.path.exists(args.destination):
       name = file.split('.')[1].split('/')[2]
@@ -59,9 +49,7 @@ def write(args, file, image):
       print('destination path does not exist')
 
 def run(args):
-  # gets the files and then gets the stitched images (through get_images) and finally does image registration
-  # and finally saves a tif
-
+  #runs the different steps of the code: - stiching - registration - save all in one image
   source = args.source
   files = get_files(source)
   list_files(source, files)
@@ -72,8 +60,6 @@ def run(args):
   if not args.disable_stitching:
     for file in files:
       image = get_images(args, file)
-      #show in napari
-      #show(args, image)
       print('Saving image and image dimension')
       write(args, file, image)
       print('DONE!')

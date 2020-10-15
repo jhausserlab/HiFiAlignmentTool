@@ -23,23 +23,6 @@ from skimage.feature import ORB, match_descriptors
 from skimage.transform import warp
 from skimage.registration import optical_flow_tvl1
 
-def get_dapi():
-  tif2 = tifffile.imread('./r22_pr.tif')
-  tif5 = tifffile.imread('./r25_pr.tif')
-
-  dapi2 = np.array(tif2[-1])
-  dapi5 = np.array(tif5[-1])
-
-  with tifffile.TiffWriter('./dapi2.tif',
-                                 bigtiff = True) as tif:
-      tif.save(dapi2)
-
-  with tifffile.TiffWriter('./dapi5.tif',
-                                 bigtiff = True) as tif:
-      tif.save(dapi5)
-
-  return print('HAHA')
-
 def get_tiffiles(source):
   return sorted(glob.glob(source + '/**/*.tif', recursive=True))
 
@@ -68,33 +51,213 @@ def final_image(source):
     tif.save(np.array(final_image))
   print('Final image saved!')
 
-source = 'aligned'
-final_image()
+def show(args, images):
+  if not args.yes:
+    with napari.gui_qt():
+      viewer = napari.Viewer()
+      for czi in images:
+        viewer.add_image(np.array(czi))
 
-def giga_image():
-  source = 'aligned'
+##### The functions below are not needed anymore, functions v1 and v2 were implemented in registration. They are now outdated
+### V1 has the subimage possibility and v0 is when i used phase_cross_correlation function for image registration
+from skimage.registration import phase_cross_correlation # new form of register_translation
+from scipy.ndimage import shift
+
+def get_aligned_images_V1(args, source):
+
   files = get_tiffiles(source)
-  print('--- First tif i:', files[0].split())
-  print('------------- ',len(files))
-  tif = tifffile.imread(files[0].split())
 
-  final_image = np.ones((1, np.shape(tif)[1], np.shape(tif)[2]), dtype = np.uint16)
-  print(np.shape(final_image))
+  print ('Reference dapi is from:', files[0].split())
+  tif_ref = tifffile.imread(files[0].split())
+  print('Loaded tif_ref', getsizeof(tif_ref)/10**6, 'MB')
+  dapi_ref = np.array(tif_ref[-1])
+  print('Extracted dapi_ref', getsizeof(dapi_ref)/10**6, 'MB')
+    
+  #Do not need tif_ref only dapi_ref from it
+  del tif_ref
+  gc.collect()
+  
+  i_max, j_max = get_max_shape(source)
 
-  for idx in range(len(files)-1):
-    print('--- Adding:', files[idx+1].split())
-    tif = tifffile.imread(files[idx+1].split())
-    final_image = np.append(final_image, tif, axis = 0)
-    print(np.shape(final_image))
-    print('Final image size: ', getsizeof(np.array(final_image))/10**6, 'MB')
+  anti_alias = True
+  rescale_fct = 0.25
 
-  final_image = np.delete(final_image, 0, 0)
-  print(np.shape(final_image))
-  print('Final image size: ', getsizeof(np.array(final_image))/10**6, 'MB')
-  print('Saving aligned image')
-  with tifffile.TiffWriter('./imageFINAL.ome.tif', bigtiff = True) as tif:
-    tif.save(np.array(final_image))
-  print('Final image saved!')
+  pad_dapi_ref = pad_image(i_max, j_max, dapi_ref)
+  pad_dapi_ref = rescale(pad_dapi_ref, rescale_fct, anti_aliasing=anti_alias)
+  print('dapi_ref padded and rescaled', getsizeof(np.array(pad_dapi_ref))/10**6, 'MB')
+
+  del dapi_ref
+  gc.collect()
+
+  for file in files:
+
+    print('--- Aligning tif i:', file.split())
+    tif_mov = tifffile.imread(file.split())
+    print('Shape of image i is: ', np.shape(tif_mov), 'size', getsizeof(tif_mov)/10**6, 'MB')
+    dapi_mov = np.array(tif_mov[-1])
+    #delete tif_mov as it is not needed for registration (only need dapi) this is done to free memory.
+    del tif_mov
+    gc.collect()
+
+    print('dapi_mov shape', np.shape(dapi_mov))
+
+    print('Padding image size to', i_max, j_max)
+    #padding of dapi
+    pad_dapi_mov = pad_image(i_max, j_max, dapi_mov)
+    print('pad_dapi_mov is of size',np.shape(pad_dapi_mov), getsizeof(pad_dapi_mov)/10**6)
+    del dapi_mov
+    gc.collect()
+
+    pad_dapi_mov = rescale(pad_dapi_mov, rescale_fct, anti_aliasing=anti_alias)
+    print('Down scaled the image to', np.shape(pad_dapi_mov))
+
+    print('Getting Transform matrix')
+
+    sr = StackReg(StackReg.RIGID_BODY)
+    """
+    #The code didn't seem to work to register subimages. Better to register the image as a whole
+    #Keeping the code in case we still want to try
+    subimage = False
+    i_size = int(6000*rescale_fct/2)
+    j_size = int(6000*rescale_fct/2)
+    if subimage:
+      # register mov to ref sr.register(ref, mov)
+      # Size of the sub image at the center. (25'000, 20'000) is 1GB size
+
+      ihalf = int(np.floor(i_max*rescale_fct/2))
+      jhalf = int(np.floor(j_max*rescale_fct/2))
+      print('center of image', ihalf, jhalf)
+      print('Taking sub image registration')
+      sr.register(pad_dapi_ref[(ihalf-i_size):(ihalf+i_size), (jhalf-j_size):(jhalf+j_size)],
+                  pad_dapi_mov[(ihalf-i_size):(ihalf+i_size), (jhalf-j_size):(jhalf+j_size)])
+    else:
+      print('Taking full image registration')
+      sr.register(pad_dapi_ref, pad_dapi_mov)
+    """
+    
+    sr.register(pad_dapi_ref, pad_dapi_mov)
+    print('Registration matrix acquired and now transforming the channels')
+
+    del pad_dapi_mov
+    gc.collect()
+
+    #Reload tif_mov to align all the images with the shift that we got from registration
+    tif_mov = tifffile.imread(file.split())
+    ######################
+    aligned_images = []
+    channels = np.shape(tif_mov)[0]
+    for channel in range(channels):
+      pad_tif_mov = pad_image(i_max, j_max, tif_mov[0,:,:])
+      pad_tif_mov = rescale(pad_tif_mov, rescale_fct, anti_aliasing=anti_alias)
+      #To free memory as we do not need these channels
+      if np.shape(tif_mov)[0] > 1: 
+        tif_mov = np.delete(tif_mov, 0, axis = 0)
+
+      aligned_images.append(sr.transform(pad_tif_mov))
+      print('info -- channel', channel,'aligned')
+      del pad_tif_mov
+      gc.collect()
+
+    print('Transformed channels done, image is of size', np.shape(aligned_images), 
+                                  getsizeof(np.array(aligned_images))/10**6, 'MB')
+
+    del tif_mov
+    gc.collect()
+
+    print('Saving aligned image')
+    with tifffile.TiffWriter('./aligned/'+file.split()[0].split('/')[2].split('.')[0]+'_al.tif',
+                                 bigtiff = True) as tif:
+      tif.save(np.array(aligned_images))
+
+    del aligned_images
+    gc.collect()
+
+  print('DONE! All images are registered')
+
+def get_aligned_images_V0(args, source):
+
+  files = get_tiffiles(source)
+
+  print ('Reference dapi is from:', files[0].split())
+  tif_ref = tifffile.imread(files[0].split())
+  print('Loaded tif_ref', getsizeof(tif_ref)/10**6, 'MB')
+  dapi_ref = np.array(tif_ref[-1])
+  print('Extracted dapi_ref', getsizeof(dapi_ref)/10**6, 'MB')
+    
+  #Do not need tif_ref only dapi_ref from it
+  del tif_ref
+  gc.collect()
+  
+  i_max, j_max = get_max_shape(source)
+
+  for file in files:
+    print('--- Aligning tif i:', file.split())
+    tif_mov = tifffile.imread(file.split())
+    print('Shape of image i is: ', np.shape(tif_mov), 'size', getsizeof(tif_mov)/10**6, 'MB')
+    dapi_mov = np.array(tif_mov[-1])
+    #delete tif_mov as it is not needed for registration (only need dapi) this is done to free memory.
+    del tif_mov
+    gc.collect()
+
+    print('dapi_ref shape', np.shape(dapi_ref))
+    print('dapi_mov shape', np.shape(dapi_mov))
+
+    print('Padding image size to', i_max, j_max)
+    #padding of dapi
+    pad_dapi_ref = pad_image(i_max, j_max, dapi_ref)
+    pad_dapi_mov = pad_image(i_max, j_max, dapi_mov)
+    print('Padded dapis are of size', getsizeof(pad_dapi_ref)/10**6)
+
+    del dapi_mov
+    gc.collect()
+
+    print('Getting Transform matrix')
+    i_size = int(3000/2)
+    j_size = int(2000/2)
+
+    ihalf = int(np.floor(i_max/2))
+    jhalf = int(np.floor(j_max/2))
+    print('center of image', ihalf, jhalf)
+
+    shifted, error, diffphase = phase_cross_correlation(pad_dapi_ref[(ihalf-i_size):(ihalf+i_size), (jhalf-j_size):(jhalf+j_size)],
+                                                     pad_dapi_mov[(ihalf-i_size):(ihalf+i_size), (jhalf-j_size):(jhalf+j_size)])
+    print(f"Detected subpixel offset (y, x): {shifted}")
+
+    del pad_dapi_ref
+    del pad_dapi_mov
+    gc.collect()
+
+    #Reload tif_mov to align all the images with the shift that we got from registration
+    tif_mov = tifffile.imread(file.split())
+
+    aligned_images = []
+    channels = np.shape(tif_mov)[0]
+    for channel in range(channels):
+      pad_tif_mov = pad_image(i_max, j_max, tif_mov[0,:,:])
+      #To free memory as we do not need these channels
+      if np.shape(tif_mov)[0] > 1: 
+        tif_mov = np.delete(tif_mov, 0, axis = 0)
+
+      print('Done padding channel', channel,'. Now doing registration')
+      aligned_images.append(shift(pad_tif_mov, shift=(shifted[0], shifted[1]), mode='constant'))
+      print('info -- channel', channel,'aligned')
+      del pad_tif_mov
+      gc.collect()
+
+    print('Transformed channels done, image is of size', np.shape(aligned_images), getsizeof(np.array(aligned_images))/10**6)
+
+    del tif_mov
+    gc.collect()
+
+    print('Saving aligned image')
+    with tifffile.TiffWriter('./aligned/'+file.split()[0].split('/')[2].split('.')[0]+'_al.tif',
+                                 bigtiff = True) as tif:
+      tif.save(np.array(aligned_images))
+
+    del aligned_images
+    gc.collect()
+
+  print('DONE! All images are registered')
 
 def get_max_shape(source):
   
@@ -124,6 +287,7 @@ def pad_image(xmax, ymax, image):
                               ,(int(np.floor((y_diff)/2)), int(np.ceil((y_diff)/2)))),'constant')
   return padded_image
 
+#  her i tried to implement different registration processes 
 def get_dapi_alignedORB():
   # http://www.gilgalad.co.uk/post/image-registration-skimage/
   print('DOING ORB!')
@@ -363,110 +527,6 @@ def get_dapi_alignedOF():
 
   print('DONE!')
 
-#import cv2  DOESNT WORK
-def get_dapi_alignedOpenCV():
-  print('DOING openCV!')
-  source = 'output'
-
-  files = get_tiffiles(source)
-
-  print ('Reference dapi is from:', files[0].split()[0])
-  #processed_tif0 = tifffile.imread(files[0].split())
-  processed_tif0 = cv2.imread('output/dapi2.tif', cv2.IMREAD_ANYDEPTH)    # Reference image. 0 is for cv2.IMREAD_GRAYSCALE
-  print('Loaded processed_tif0', getsizeof(processed_tif0)/10**6, 'MB', type(processed_tif0))
-  dapi_target = np.array(processed_tif0)
-  print('Extracted dapi_target', getsizeof(dapi_target)/10**6, 'MB')
-    
-  #Do not need processed_tif0 only dapi_target from it
-  del processed_tif0
-  gc.collect()
-  
-  xmax, ymax = get_max_shape(source)
-
-  for file in files:
-    print('--- Aligning tif i:', file.split())
-    #processed_tif = tifffile.imread(file.split())
-    processed_tif = cv2.imread(file.split()[0], cv2.IMREAD_ANYDEPTH )  # Image to be aligned. 0 is for cv2.IMREAD_GRAYSCALE CV_LOAD_IMAGE_ANYDEPTH
-    print('Shape of image i is: ', np.shape(processed_tif), 'size', getsizeof(processed_tif)/10**6, 'MB')
-    dapi_to_offset = np.array(processed_tif)
-    #delete processed_tif as it is not needed for registration (only need dapi) this is done to free memory.
-    del processed_tif
-    gc.collect()
-
-    #shifted = get_shift(xmax, ymax, dapi_target, dapi_to_offset)
-    ###################
-    print('dapi_target shape', np.shape(dapi_target))
-    print('dapi_to_offset shape', np.shape(dapi_to_offset))
-    print('dapi size is', getsizeof(dapi_target)/10**6)
-
-    print('Recalibrating image size to', xmax, ymax)
-    #padding of dapi
-    max_dapi_target = pad_image(xmax, ymax, dapi_target)
-    max_dapi_to_offset = pad_image(xmax, ymax, dapi_to_offset)
-    print('DONE, padded dapiS are of size', getsizeof(max_dapi_target)/10**6)
-
-    del dapi_to_offset
-    gc.collect()
-
-    print('Getting Transform matrix')
-    # IMAGE 1 is to be MODIFIED
-
-    # Convert to grayscale. 
-    #img1 = cv2.cvtColor(img1_color, cv2.COLOR_BGR2GRAY) 
-    #img2 = cv2.cvtColor(img2_color, cv2.COLOR_BGR2GRAY) 
-    #height, width = img2.shape 
-      
-    # Create ORB detector with 5000 features. 
-    orb_detector = cv2.ORB_create(500) 
-      
-    # Find keypoints and descriptors. 
-    # The first arg is the image, second arg is the mask 
-    #  (which is not reqiured in this case). 
-    kp1, d1 = orb_detector.detectAndCompute(max_dapi_to_offset, None) 
-    kp2, d2 = orb_detector.detectAndCompute(max_dapi_target, None) 
-      
-    # Match features between the two images. 
-    # We create a Brute Force matcher with  
-    # Hamming distance as measurement mode. 
-    matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck = True) 
-      
-    # Match the two sets of descriptors. 
-    matches = matcher.match(d1, d2) 
-      
-    # Sort matches on the basis of their Hamming distance. 
-    matches.sort(key = lambda x: x.distance) 
-      
-    # Take the top 90 % matches forward. 
-    matches = matches[:int(len(matches)*90)] 
-    no_of_matches = len(matches) 
-      
-    # Define empty matrices of shape no_of_matches * 2. 
-    p1 = np.zeros((no_of_matches, 2)) 
-    p2 = np.zeros((no_of_matches, 2)) 
-      
-    for i in range(len(matches)): 
-      p1[i, :] = kp1[matches[i].queryIdx].pt 
-      p2[i, :] = kp2[matches[i].trainIdx].pt 
-      
-    # Find the homography matrix. 
-    homography, mask = cv2.findHomography(p1, p2, cv2.RANSAC) 
-    print(homography)
-      
-    # Use this matrix to transform the 
-    # colored image wrt the reference image. 
-    transformed_img = cv2.warpPerspective(max_dapi_to_offset, 
-                        homography, (width, height)) 
-      
-    # Save the output. 
-    #cv2.imwrite('output.jpg', transformed_img) 
-
-    print('Saving aligned image',file.split()[0].split('/')[1])
-    with tifffile.TiffWriter('./aligned/'+file.split()[0].split('/')[1].split('.')[0]+'_al.tif',
-                                 bigtiff = True) as tif:
-      tif.save(np.array(transformed_img))
-
-  print('DONE!')
-
 def get_aligned_imagesStackReg():
 
   source = 'output'
@@ -593,4 +653,5 @@ def get_aligned_imagesStackReg():
     #input('CHECK RAM ---- aligned_images deleted')
 
   print('DONE!')
+
 

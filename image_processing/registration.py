@@ -11,7 +11,7 @@ def get_tiffiles(source):
   return sorted(glob.glob(source + '/**/*.tif', recursive=True))
 
 def get_max_shape(source):
-  
+  #this function gets the maximum dimensions from all the images that are going to be registered
   filepath = glob.glob(source + '/**/*.txt', recursive=True)
   print ('Getting max dimensions with: ',filepath)
   file = open(filepath[0],'r')
@@ -29,6 +29,7 @@ def get_max_shape(source):
   return i_max,j_max
 
 def pad_image(i_max, j_max, image):
+  #pads the images if the dimensions are not the same for all of them
   #image must be of dimension X,Y so we input channels not the whole image C,X,Y
   i_diff = i_max - np.shape(image)[0]
   j_diff = j_max - np.shape(image)[1]
@@ -39,6 +40,7 @@ def pad_image(i_max, j_max, image):
   return padded_image
 
 def get_aligned_images(args, source):
+  #function used to do registration on all images with respect to the first image of the file list.
 
   files = get_tiffiles(source)
 
@@ -48,18 +50,20 @@ def get_aligned_images(args, source):
   dapi_ref = np.array(tif_ref[-1])
   print('Extracted dapi_ref', getsizeof(dapi_ref)/10**6, 'MB')
     
-  #Do not need tif_ref only dapi_ref from it
+  #Do not need tif_ref only dapi_ref from it (free memory)
   del tif_ref
   gc.collect()
   
   i_max, j_max = get_max_shape(source)
 
+  # To see if padding is required
   if(np.shape(dapi_ref)[0] == i_max and np.shape(dapi_ref)[1] == j_max):
     pad_dapi_ref = dapi_ref
   else:
     print('---------------- Images will be padded -----------------')
     pad_dapi_ref = pad_image(i_max, j_max, dapi_ref)
   
+  #If you asked for downscaling the image
   if args.downscale:
     anti_alias = True
     rescale_fct = args.factor[0]
@@ -73,28 +77,32 @@ def get_aligned_images(args, source):
   del dapi_ref
   gc.collect()
 
+  # We have our reference channel, now we go get our image to align
   for idx,file in enumerate(files):
     print('--- Aligning tif:', file.split())
     tif_mov = tifffile.imread(file.split())
     print('Shape of image is: ', np.shape(tif_mov), 'size', getsizeof(tif_mov)/10**6, 'MB')
     dapi_mov = np.array(tif_mov[-1])
+    
     #delete tif_mov as it is not needed for registration (only need dapi) this is done to free memory.
     del tif_mov
     gc.collect()
 
+    #padding image if it is needed
     if(np.shape(dapi_mov)[0] == i_max and np.shape(dapi_mov)[1] == j_max):
       pad_dapi_mov = dapi_mov
     else:
       print('Padding image size to', i_max, j_max)
       pad_dapi_mov = pad_image(i_max, j_max, dapi_mov)
-      print('pad_dapi_mov is of size',np.shape(pad_dapi_mov))
     del dapi_mov
     gc.collect()
 
+    #Downscaling image if asked
     if args.downscale:
       pad_dapi_mov = rescale(pad_dapi_mov, rescale_fct, anti_aliasing=anti_alias, preserve_range = True)
       print('Down scaled the image to', np.shape(pad_dapi_mov), getsizeof(np.array(pad_dapi_mov))/10**6, 'MB')
 
+    #Doing the registration between both channels
     print('Getting Transform matrix')
     sr = StackReg(StackReg.RIGID_BODY)
     sr.register(pad_dapi_ref, pad_dapi_mov)
@@ -104,7 +112,7 @@ def get_aligned_images(args, source):
     del pad_dapi_mov
     gc.collect()
 
-    #Reload tif_mov to align all the images with the shift that we got from registration
+    #Reload tif_mov to align all the images with the transformation that we got from registration
     tif_mov = tifffile.imread(file.split())
     
     aligned_images = []
@@ -133,14 +141,16 @@ def get_aligned_images(args, source):
         if np.shape(tif_mov)[0] > 1: 
           tif_mov = np.delete(tif_mov, 0, axis = 0)
       
+      #To downscale the channel if asked
       if args.downscale:
         pad_tif_mov = rescale(pad_tif_mov, rescale_fct, anti_aliasing=anti_alias, preserve_range = True)
       
+      #Doing the image registration
       aligned_tif = sr.transform(pad_tif_mov)
       del pad_tif_mov
       gc.collect()
 
-      #Due to the registration, some values become negative at the edges (rotation + translation)
+      #Due to the registration, some values become negative at the edges (with the transformation matrix)
       #If I do not correct this, i get white bands as these negative values get converted to maximum values in uint16.
       #I do equal to 0 as it is at the edge and can be considered as background
       aligned_tif[aligned_tif <= 0] = 0
@@ -152,16 +162,8 @@ def get_aligned_images(args, source):
       del aligned_tif
       gc.collect()
 
-      '''
-      aligned_images.append(sr.transform(pad_tif_mov))
-      print('info -- channel', channel,'aligned')
-      del pad_tif_mov
-      gc.collect()
-      '''
-
     print('Transformed channels done, image is of size', np.shape(aligned_images), 
                                   getsizeof(np.array(aligned_images))/10**6, 'MB')
-
     del tif_mov
     gc.collect()
 
@@ -176,6 +178,8 @@ def get_aligned_images(args, source):
   print('DONE! All images are registered')
 
 def final_image(source):
+  # loads one registed image after another and saves them all into one image. The first image keeps the dapi
+  # whereas we remove dapi for all the others
   files = get_tiffiles(source)
   tif = tifffile.imread(files[0].split())
 

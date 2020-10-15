@@ -45,10 +45,10 @@ parser.add_argument(
 parser.add_argument(
   '--factor', 
   metavar ='N', 
-  type = float, 
+  type = float,
   nargs ='+', 
   default=[0.33],
-  help ='Scale factor between 0. - 1. (needs --downscale to work else full resolution)'
+  help ='Scale factor between 0. - 1. (needs --downscale to work else it is full resolution)'
 ) 
 parser.add_argument(
   '--finalimage',
