@@ -22,6 +22,12 @@ parser.add_argument(
   help='generate image without asking any questions'
 )
 parser.add_argument(
+  '--reference', 
+  type = str,
+  default='DAPI',
+  help ='The reference channel that will be used for registration (based on the csv file)'
+) 
+parser.add_argument(
   '--disable-stitching',
   action='store_const',
   const=True,
@@ -45,10 +51,8 @@ parser.add_argument(
 )
 parser.add_argument(
   '--factor', 
-  metavar ='N', 
   type = float,
-  nargs ='+', 
-  default=[0.33],
+  default=0.33,
   help ='Scale factor between 0. - 1. (needs --downscale to work else it is full resolution)'
 ) 
 parser.add_argument(
