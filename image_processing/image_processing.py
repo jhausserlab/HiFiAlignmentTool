@@ -111,6 +111,3 @@ def run(args):
   else:
     print("-------- No final image ---------")
 
-
-def get_files0(source):
-  return sorted(glob.glob(source + '/**/*.czi', recursive=True))
