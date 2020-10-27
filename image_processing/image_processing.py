@@ -92,19 +92,18 @@ def channel_check(args, source):
       print('--------- Terminating program ---------')
       exit()
   print('# Channels in CSV match channels in images, continue program')
+  print('------- CSV matches images and all images have the reference channel -------')
 
 def get_img_dim(source):
   print('----- Extracting image dimensions and putting them in image_shape.txt -----')
   files = get_tiffiles(source)
-  name_txt = 'image_shape'
+  file_name = open(source +'/image_shape.txt',"w")
   for i in range(len(files)):
     tif = tifffile.imread(source +'/'+ files[i])
-
-    with open(f'{os.path.basename(source)}/{name_txt}' + '.txt', 'a') as f:
-        #Save dimension C X Y for processing when we want to register
-        f.write(str(np.shape(tif)[0])+','+str(np.shape(tif)[1])+','+str(np.shape(tif)[2])+';')
+    file_name.write(str(np.shape(tif)[0])+','+str(np.shape(tif)[1])+','+str(np.shape(tif)[2])+';')
     del tif
     gc.collect()
+  file_name.close()
 
 def run(args):
   #runs the different steps of the code: - stiching - registration - save all in one image
