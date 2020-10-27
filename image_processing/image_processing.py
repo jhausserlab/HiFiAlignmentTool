@@ -4,10 +4,19 @@ import os
 import tifffile
 import pathlib
 from image_processing.czi import get_image
-from image_processing.registration import get_files, get_aligned_images, final_image
+from image_processing.registration import get_tiffiles, get_aligned_images, final_image
 from sys import getsizeof
 import gc
 import pandas as pd
+
+def get_czifiles(source):
+    data_strct = pd.read_csv("channel_name.csv")
+    file_name = []
+    for i in range(data_strct.shape[0]):
+      filepath = glob.glob(source+'/'+data_strct['Filename'][i]+'*.czi', recursive=True)[0]
+      file_name.append(filepath.split('/')[2])
+
+    return file_name
 
 def list_files(source, files):
   file_names = '\n'.join(files)
@@ -33,7 +42,7 @@ def write(args, file, image):
   #saves the stitched image in the destination file
   if args.destination:
     if os.path.exists(args.destination):
-      name = file
+      name = file.split('.')[0]
       name_txt = 'image_shape'
       file = f'{os.path.basename(args.destination)}/{name}'
 
@@ -84,12 +93,24 @@ def channel_check(args, source):
       exit()
   print('# Channels in CSV match channels in images, continue program')
 
+def get_img_dim(source):
+  print('----- Extracting image dimensions and putting them in image_shape.txt -----')
+  files = get_tiffiles(source)
+  name_txt = 'image_shape'
+  for i in range(len(files)):
+    tif = tifffile.imread(source +'/'+ files[i])
+
+    with open(f'{os.path.basename(source)}/{name_txt}' + '.txt', 'a') as f:
+        #Save dimension C X Y for processing when we want to register
+        f.write(str(np.shape(tif)[0])+','+str(np.shape(tif)[1])+','+str(np.shape(tif)[2])+';')
+    del tif
+    gc.collect()
 
 def run(args):
   #runs the different steps of the code: - stiching - registration - save all in one image
-  files = get_files()
   if not args.disable_stitching:
     source = args.source
+    files = get_czifiles(source)
     list_files(source, files)
 
     if not args.yes:
@@ -106,24 +127,27 @@ def run(args):
 
   if not args.disable_registration:
     source = args.destination
+    files = get_tiffiles(source)
     list_files(source,files)
 
     if not args.yes:
       ask_for_approval()
 
+    if args.getdim:
+      get_img_dim(source)
     channel_check(args, source)
     get_aligned_images(args, source)
   else:
     print("----- No image registration -----")
 
   if args.finalimage:
-    source = 'aligned'
+    source = './aligned'
+    files = get_tiffiles(source)
     list_files(source,files)
 
     if not args.yes:
       ask_for_approval()
 
-    final_image(source)
+    final_image(args, source)
   else:
     print("-------- No final image ---------")
-

@@ -11,8 +11,14 @@ def dir_path(string):
 
 parser = argparse.ArgumentParser(description='Microscopy Image processing')
 
-parser.add_argument('source', type=dir_path, help='input path, the folder of czi to stitch')
-parser.add_argument('destination', type=dir_path, help='output path, the folder where to put the stitched images')
+parser.add_argument(
+  'source', 
+  type=dir_path, 
+  help='input path, the folder of czi to stitch')
+parser.add_argument(
+  'destination', 
+  type=dir_path, 
+  help='output path, the folder where to put the stitched images')
 parser.add_argument(
   '-y',
   '--yes',
@@ -61,6 +67,13 @@ parser.add_argument(
   const=True,
   default=False,
   help='Saves all the channels into one image and removes all dapis except from the first image'
+)
+parser.add_argument(
+  '--getdim',
+  action='store_const',
+  const=True,
+  default=False,
+  help='If you already have tif images and you do not do czi stitching, use this argument to create the image_shape.txt'
 )
 
 args = parser.parse_args()

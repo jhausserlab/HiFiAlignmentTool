@@ -31,8 +31,8 @@ def get_stitched_czi(czi):
 
 def get_image(source, file):
   #Takes file as argument and returns the stitched images of the file
-  print('--- Processing:', source + '/' + file + '.czi')
-  czi = aicspylibczi.CziFile(pathlib.Path(source + '/' + file + '.czi'))
+  print('--- Processing:', source + '/' + file)
+  czi = aicspylibczi.CziFile(pathlib.Path(source + '/' + file ))
   stitched_czi = get_stitched_czi(czi)
   print('Shape of stitched shape: ', np.shape(stitched_czi), 'of size', getsizeof(np.array(stitched_czi))/10**6, 'MB')
   return stitched_czi
