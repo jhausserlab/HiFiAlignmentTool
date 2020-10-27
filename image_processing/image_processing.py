@@ -46,8 +46,22 @@ def write(args, file, image):
     else:
       print('destination path does not exist')
 
-def channel_check(source):
+def channel_check(args, source):
+  print('------- Verifying that CSV file matches images -------')
+  ref = args.reference
   data_strct = pd.read_csv("channel_name.csv")
+
+  #To check if the reference channel is present in all images
+  for i in range(data_strct.shape[0]):
+    if(str(data_strct[ref][i]) == 'nan'):
+      print('Image', data_strct['Filename'][i],'does not have the reference channel.')
+      print(data_strct[['Filename',ref]])
+      print('Please check your CSV file.')
+      print('--------- Terminating program ---------')
+      exit()
+  print('Reference channel is present in all images, continue program.')
+
+  #To check if the images have the same number of channels as in the CSV
   idx_values = data_strct.copy()
   for i in range(data_strct.shape[0]):
     idx = 0
@@ -63,10 +77,12 @@ def channel_check(source):
     chan = split[i].split(',')
     if(int(chan[0]) != idx_values.iloc[:,-1][i]+1):
       print('The number of channels in CSV file doesn’t match the number of channels in image', idx_values.iloc[:,0][i],'.')
-      print(int(split[i].split(',')[0]),'in', idx_values.iloc[:,0][i] ,'and', idx_values.iloc[:,-1][i]+1,'in CSV file.')
-      print('Please check your CSV file')
+      print(int(split[i].split(',')[0]),'in image', idx_values.iloc[:,0][i] ,'and', idx_values.iloc[:,-1][i]+1,'in CSV file.')
+      print(data_strct.loc[i])
+      print('Please modify your CSV file')
       print('--------- Terminating program ---------')
       exit()
+  print('# Channels in CSV match channels in images, continue program')
 
 
 def run(args):
@@ -95,7 +111,7 @@ def run(args):
     if not args.yes:
       ask_for_approval()
 
-    channel_check(source)
+    channel_check(args, source)
     get_aligned_images(args, source)
   else:
     print("----- No image registration -----")
