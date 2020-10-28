@@ -114,6 +114,12 @@ def run(args):
 
     if not args.yes:
       ask_for_approval()
+
+    # To reset the txt file. Often during my testing I would forget and that created errors.
+    # In case others do the same thing. This will help
+    file_name = open(args.destination +'/image_shape.txt',"w")
+    file_name.write('')
+    file_name.close()
     for file in files:
       image = get_image(source, file)
       print('Saving image and image dimension')
