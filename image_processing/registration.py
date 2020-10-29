@@ -31,6 +31,7 @@ def get_tiffiles(source):
 def get_aligned_marker_names(ref):
   data = pd.read_csv("channel_name.csv")
   #create a list of the channel names. in the order that they were saved as in CZI
+  name_header = data.columns[0]
   chan_name = []
   #i is image
   for i in range(data.shape[0]):
