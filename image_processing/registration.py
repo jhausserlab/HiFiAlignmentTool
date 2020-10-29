@@ -114,6 +114,7 @@ def get_aligned_images(args, source):
   files = get_tiffiles(source)
   filename = get_filename()
   ref = args.reference
+  get_aligned_marker_names(ref)
 
   #Read the csv file with the data structure
   data_strct = pd.read_csv("channel_name.csv")
@@ -273,7 +274,6 @@ def get_aligned_images(args, source):
     del aligned_images
     gc.collect()
 
-  get_aligned_marker_names(ref)
   print('DONE! All images are registered')
 
 def final_image(args,source):
