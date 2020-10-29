@@ -12,16 +12,18 @@ import pandas as pd
 def get_filename():
   data_strct = pd.read_csv("channel_name.csv")
   file_name = []
+  name_header = data_strct.columns[0]
   for i in range(data_strct.shape[0]):
-    file_name.append(data_strct['Filename'][i])
+    file_name.append(data_strct[name_header][i])
 
   return file_name
 
 def get_tiffiles(source):
     data_strct = pd.read_csv("channel_name.csv")
+    name_header = data_strct.columns[0]
     file_name = []
     for i in range(data_strct.shape[0]):
-      filepath = glob.glob(source+'/'+data_strct['Filename'][i]+'*.tif', recursive=True)[0]
+      filepath = glob.glob(source+'/'+data_strct[name_header][i]+'*.tif', recursive=True)[0]
       file_name.append(filepath.split('/')[2])
 
     return file_name
@@ -35,7 +37,7 @@ def get_aligned_marker_names(ref):
     #j is channel
     for j in range(data.shape[1]-1):
       if(str(data[data.columns[j+1]][i]) != 'nan'):
-        chan_name.append(data[data.columns[j+1]][i] +'_'+ data.columns[j+1] +'_'+ data['Filename'][i])
+        chan_name.append(data[data.columns[j+1]][i] +'_'+ data.columns[j+1] +'_'+ data[name_header][i])
 
   #Modify the list to put the reference channel as the first channel of each image
   img = chan_name[0].split('_')[2]
@@ -114,6 +116,7 @@ def get_aligned_images(args, source):
 
   #Read the csv file with the data structure
   data_strct = pd.read_csv("channel_name.csv")
+  name_header = data_strct.columns[0]
   # The following bit of code is to know which idx is the reference channel. 
   # I create a new dataframe idx_values that return the idx of the reference channel with respect to the image 
   # that is being treated
@@ -127,7 +130,7 @@ def get_aligned_images(args, source):
     for j in range(data_strct.shape[1]-1):
     #j is channel
       if(str(data_strct[data_strct.columns[j+1]][i]) != 'nan'):
-        chan_name.append(data_strct[data_strct.columns[j+1]][i] +'_'+ data_strct.columns[j+1] +'_'+ data_strct['Filename'][i])
+        chan_name.append(data_strct[data_strct.columns[j+1]][i] +'_'+ data_strct.columns[j+1] +'_'+ data_strct[name_header][i])
         idx_values[data_strct.columns[j+1]][i] = idx
         idx += 1
 
@@ -136,7 +139,7 @@ def get_aligned_images(args, source):
   tif_ref = tifffile.imread(source +'/'+ files[0])
 
   print('Loaded tif_ref', getsizeof(tif_ref)/10**6, 'MB')
-  chan_ref = np.array(tif_ref[idx_values[ref][idx_values['Filename'] == filename[0]].values[0]])
+  chan_ref = np.array(tif_ref[idx_values[ref][idx_values[name_header] == filename[0]].values[0]])
   print('Extracted chan_ref', getsizeof(chan_ref)/10**6, 'MB')
     
   #Do not need tif_ref only chan_ref from it (free memory)
@@ -171,8 +174,8 @@ def get_aligned_images(args, source):
     print('--- Aligning tif:', files[idx])
     tif_mov = tifffile.imread(source +'/'+ files[idx])
     print('Shape of image is: ', np.shape(tif_mov), 'size', getsizeof(tif_mov)/10**6, 'MB')
-    print('------- Reference Channel idx in the image:',idx_values[ref][idx_values['Filename'] == filename[idx]].values[0] + 1)
-    chan_mov = np.array(tif_mov[idx_values[ref][idx_values['Filename'] == filename[idx]].values[0]])
+    print('------- Reference Channel idx in the image:',idx_values[ref][idx_values[name_header] == filename[idx]].values[0] + 1)
+    chan_mov = np.array(tif_mov[idx_values[ref][idx_values[name_header] == filename[idx]].values[0]])
     
     #delete tif_mov as it is not needed for registration (only need chan_ref) this is done to free memory.
     del tif_mov
@@ -216,9 +219,9 @@ def get_aligned_images(args, source):
       #To put reference channel as first channel in the image and to see if we need padding
       if channel == 0:
         if(np.shape(tif_mov)[1] == i_max and np.shape(tif_mov)[2] == j_max):
-          pad_tif_mov = tif_mov[idx_values[ref][idx_values['Filename'] == filename[idx]].values[0],:,:]
+          pad_tif_mov = tif_mov[idx_values[ref][idx_values[name_header] == filename[idx]].values[0],:,:]
         else:
-          pad_tif_mov = pad_image(i_max, j_max, tif_mov[idx_values[ref][idx_values['Filename'] == filename[idx]].values[0],:,:])
+          pad_tif_mov = pad_image(i_max, j_max, tif_mov[idx_values[ref][idx_values[name_header] == filename[idx]].values[0],:,:])
       else:
         if(np.shape(tif_mov)[1] == i_max and np.shape(tif_mov)[2] == j_max):
           pad_tif_mov = tif_mov[0,:,:]
@@ -230,7 +233,7 @@ def get_aligned_images(args, source):
       #thus we have reference channel removed, after it is the normal order (remove first channel)
       if channel == 0:
         if np.shape(tif_mov)[0] > 1: 
-          tif_mov = np.delete(tif_mov, idx_values[ref][idx_values['Filename'] == filename[idx]].values[0], axis = 0)
+          tif_mov = np.delete(tif_mov, idx_values[ref][idx_values[name_header] == filename[idx]].values[0], axis = 0)
       else:
         if np.shape(tif_mov)[0] > 1: 
           tif_mov = np.delete(tif_mov, 0, axis = 0)

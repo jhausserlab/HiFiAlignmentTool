@@ -12,8 +12,9 @@ import pandas as pd
 def get_czifiles(source):
     data_strct = pd.read_csv("channel_name.csv")
     file_name = []
+    name_header = data_strct.columns[0]
     for i in range(data_strct.shape[0]):
-      filepath = glob.glob(source+'/'+data_strct['Filename'][i]+'*.czi', recursive=True)[0]
+      filepath = glob.glob(source+'/'+data_strct[name_header][i]+'*.czi', recursive=True)[0]
       file_name.append(filepath.split('/')[2])
 
     return file_name
@@ -59,12 +60,13 @@ def channel_check(args, source):
   print('------- Verifying that CSV file matches images -------')
   ref = args.reference
   data_strct = pd.read_csv("channel_name.csv")
+  name_header = data_strct.columns[0]
 
   #To check if the reference channel is present in all images
   for i in range(data_strct.shape[0]):
     if(str(data_strct[ref][i]) == 'nan'):
-      print('Image', data_strct['Filename'][i],'does not have the reference channel.')
-      print(data_strct[['Filename',ref]])
+      print('Image', data_strct[name_header][i],'does not have the reference channel.')
+      print(data_strct[[name_header,ref]])
       print('Please check your CSV file.')
       print('--------- Terminating program ---------')
       exit()
