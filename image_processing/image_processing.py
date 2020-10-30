@@ -14,8 +14,11 @@ def get_czifiles(source):
     file_name = []
     name_header = data_strct.columns[0]
     for i in range(data_strct.shape[0]):
-      filepath = glob.glob(source+'/'+data_strct[name_header][i]+'*.czi', recursive=True)[0]
-      file_name.append(filepath.split('/')[2])
+      try:
+        filepath = glob.glob(source+'/'+data_strct[name_header][i]+'*.czi', recursive=True)[0]
+        file_name.append(filepath.split('/')[2])
+      except IndexError:
+        raise IndexError('Filename in CSV ---',data_strct[name_header][i],'--- does not match that of the file in folder',source) from None
 
     return file_name
 
@@ -93,8 +96,7 @@ def channel_check(args, source):
       print('Please modify your CSV file')
       print('--------- Terminating program ---------')
       exit()
-  print('# Channels in CSV match channels in images, continue program')
-  print('------- CSV matches images and all images have the reference channel -------')
+  print('------- CSV file matches images and all images have the reference channel -------')
 
 def get_img_dim(source):
   print('----- Extracting image dimensions and putting them in image_shape.txt -----')

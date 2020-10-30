@@ -32,6 +32,12 @@ parser.add_argument(
   type = str,
   default='DAPI',
   help ='The reference channel that will be used for registration (based on the csv file)'
+)
+parser.add_argument(
+  '--resolution', 
+  type = float,
+  default=0.325,
+  help ='Resolution of the image: what does 1 pixel represent in micrometers'
 ) 
 parser.add_argument(
   '--disable-stitching',

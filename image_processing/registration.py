@@ -23,8 +23,11 @@ def get_tiffiles(source):
     name_header = data_strct.columns[0]
     file_name = []
     for i in range(data_strct.shape[0]):
-      filepath = glob.glob(source+'/'+data_strct[name_header][i]+'*.tif', recursive=True)[0]
-      file_name.append(filepath.split('/')[2])
+      try:
+        filepath = glob.glob(source+'/'+data_strct[name_header][i]+'*.tif', recursive=True)[0]
+        file_name.append(filepath.split('/')[2])
+      except IndexError:
+        raise IndexError('Filename in CSV ---',data_strct[name_header][i],'--- does not match that of the file in folder',source) from None
 
     return file_name
 
@@ -71,7 +74,7 @@ def get_final_marker_names(ref):
       if i != 0:
         print('Removed reference channel', i,'called', marker_names_final[i])
         marker_names_final.pop(i)
-  print(len(marker_names_final))
+  print('Final image size will be:',len(marker_names_final))
 
   file_name = open("marker_names_final.txt","w")
   for i in range(len(marker_names_final)):
@@ -108,12 +111,24 @@ def pad_image(i_max, j_max, image):
                               ,(int(np.floor((j_diff)/2)), int(np.ceil((j_diff)/2)))),'constant')
   return padded_image
 
+def get_metadata(filename, img_shape, mrk_nm, resolution):
+  #name of the file you are running, shape of the image, the name of the channels, the scale of the image (pxl = XX um)
+  mdata = '''<?xml version="1.0" encoding="UTF-8" standalone="no"?><!-- Warning: this comment is an OME-XML metadata block, which contains crucial dimensional parameters and other important metadata. Please edit cautiously (if at all), and back up the original data before doing so. For more information, see the OME-TIFF web site: https://docs.openmicroscopy.org/latest/ome-model/ome-tiff/. --><OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Creator="OME Bio-Formats 6.5.1" UUID="urn:uuid:e152586d-4214-4027-a620-edb3f6cfc6af" xsi:schemaLocation="http://www.openmicroscopy.org/Schemas/OME/2016-06 http://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd">'''
+  mdata = mdata + '''<Image ID="Image:0" Name="'''+filename+'''">'''
+  mdata = mdata + '''<Pixels ID="Pixels:0" DimensionOrder="XYCZT" PhysicalSizeX="'''+str(resolution)+'''" PhysicalSizeY="'''+str(resolution)+'''" Type="uint16" SizeX="'''+str(img_shape[2])+'''" SizeY="'''+str(img_shape[1])+'''" SizeC="'''+str(img_shape[0])+'''" SizeZ="1" SizeT="1">'''
+  for i in range(len(mrk_nm)):
+    mdata = mdata + '''<Channel ID="Channel:0:'''+str(i)+'''" Name="'''+mrk_nm[i]+'''" SamplesPerPixel="1"><LightPath/></Channel>'''
+  mdata = mdata + '''</Pixels></Image></OME>'''
+
+  return mdata
+
 def get_aligned_images(args, source):
   #function used to do registration on all images with respect to the first image of the file list.
 
   files = get_tiffiles(source)
   filename = get_filename()
   ref = args.reference
+  resolution = args.resolution
   get_aligned_marker_names(ref)
 
   #Read the csv file with the data structure
@@ -125,14 +140,12 @@ def get_aligned_images(args, source):
   # this takes into account the empty cells if a channel is not used for a given image. 
   # (reference channel should always be used)
   idx_values = data_strct.copy()
-  chan_name = []
   for i in range(data_strct.shape[0]):
   #i is image
     idx = 0
     for j in range(data_strct.shape[1]-1):
     #j is channel
       if(str(data_strct[data_strct.columns[j+1]][i]) != 'nan'):
-        chan_name.append(data_strct[data_strct.columns[j+1]][i] +'_'+ data_strct.columns[j+1] +'_'+ data_strct[name_header][i])
         idx_values[data_strct.columns[j+1]][i] = idx
         idx += 1
 
@@ -162,6 +175,8 @@ def get_aligned_images(args, source):
     anti_alias = True
     rescale_fct = args.factor
     print('----- Images will be downscaled',rescale_fct*100,'%  resolution------')
+    resolution = round(resolution/rescale_fct,3)
+    print('----- 1 pixel represents',resolution,'um------')
     pad_chan_ref = rescale(pad_chan_ref, rescale_fct, anti_aliasing=anti_alias, preserve_range = True)
     print('chan_ref rescaled', getsizeof(np.array(pad_chan_ref))/10**6, 'MB')
   else:
@@ -265,11 +280,21 @@ def get_aligned_images(args, source):
                                   getsizeof(np.array(aligned_images))/10**6, 'MB')
     del tif_mov
     gc.collect()
+    
+    #To put the marker names in the metadata and also the resolution
+    marker_names_al = open('./aligned/marker_names_al.txt',"r")
+    marker_al = marker_names_al.readlines()
+    mrk_nm = []
+    for mrk in range(len(marker_al)):
+      if marker_al[mrk].split('_')[2].split('\n')[0] == filename[idx]:
+        mrk_nm.append(marker_al[mrk].split('\n')[0])
+    print('------- The markers of the image are: ',mrk_nm)
+    mdata = get_metadata(filename[idx],np.shape(aligned_images), mrk_nm, resolution)
 
     print('Saving aligned image')
     with tifffile.TiffWriter('./aligned/'+filename[idx]+'_al.ome.tif',
                                  bigtiff = True) as tif:
-      tif.save(np.array(aligned_images))
+      tif.save(np.array(aligned_images), description  = mdata)
 
     del aligned_images
     gc.collect()
@@ -281,9 +306,13 @@ def final_image(args,source):
   # whereas we remove reference channels for all the others
   print('-------------- Final image --------------')
   ref = args.reference
+  resolution = args.resolution
   get_final_marker_names(ref)
   files = get_tiffiles(source)
   tif = tifffile.imread(source +'/'+ files[0])
+
+  if args.downscale:
+    resolution = round(resolution/args.factor,3)
 
   final_image = tif
   print('Adding first image:', files[0], ' ------ ' ,np.shape(final_image))
@@ -300,7 +329,12 @@ def final_image(args,source):
     print('Image size: ', getsizeof(np.array(final_image))/10**6, 'MB')
 
   print('Final image size: ',np.shape(final_image), getsizeof(np.array(final_image))/10**6, 'MB')
+
+  marker_names_final = open('./marker_names_final.txt',"r")
+  marker_final = marker_names_final.readlines()
+  mdata = get_metadata('final_image', np.shape(final_image), marker_final, resolution)
+
   with tifffile.TiffWriter('./final_image.ome.tif', bigtiff = True) as tif:
-    tif.save(np.array(final_image))
+    tif.save(np.array(final_image), description  = mdata)
 
   print('Final image saved!')
