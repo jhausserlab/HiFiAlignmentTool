@@ -56,7 +56,7 @@ python3 main.py ./czi ./stitched
 main.py has also 6 optional arguments:
 1. -y, --yes --> runs the code without asking questions before stitching and before registration
 2. --reference CHAN --> in place of chan put the channel you want to align with (DAPI by default)
-3. --resolution XX --> the resolution of the image in um  which will be added in the metadata(0.325 um by default)
+3. --resolution XX --> the resolution of input images in um/pixel which will be added in the metadata(0.325 um by default)
 4. --disable-stitching --> if you want to skip the stitching
 5. --disable-registration --> if you want to skip the image registeration
 6. -d, --downscale --> if you want to reduce the resolution of your image (default is 0.33) if your image is too large for processing.
