@@ -79,6 +79,7 @@ python3 main.py --help
 5. Restart from step 2 for the next czi file.
 
 **IMAGE REGISTRATION**
+
 0. If --getdim, load each image and save the dimensions in a txt file.
 1. Load the first image in the list which will be used as the reference
 2. Extract reference channel which is used for alignment using the CSV file.
