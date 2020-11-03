@@ -120,8 +120,7 @@ Finally, if the images are too large for your computer to process and you would 
 ```
 python3 main.py ./czi ./stitched --reference DAPI --resolution 0.325 --finalimage -y --downscale --factor 0.5
 ```
-
-NB: The small set of image is taken froma region where the stitching from czi was poorly done, thus there are shifts in the image. 
+The small set of image is taken from a region where the stitching from czi was poorly done, thus there are shifts in the image. 
 This is just to help you run and understand how the code works.
 
 
