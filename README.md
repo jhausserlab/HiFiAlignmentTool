@@ -77,15 +77,15 @@ When downloading the github folder, you have a mock image set with its respectiv
 To ensure the code is running and to also try the different options, you can work with this small image set.
 First of all I suggest to run the following code
 ```
-python3 main.py ./czi ./stitched --reference DAPI --resolution 0.325 —-finalimage
+python3 main.py ./czi ./stitched --reference DAPI --resolution 0.325 --finalimage
 ```
 This will stitch, register and save the final image and ask you to confirm for every step. Once this works, you can skip the ask for approval part by adding -y like so:
 ```
-python3 main.py ./czi ./stitched --reference DAPI --resolution 0.325 —-finalimage -y
+python3 main.py ./czi ./stitched --reference DAPI --resolution 0.325 --finalimage -y
 ```
-Finally, if the images are too large for your computer to process and you would like to downsize the image (e.g 50% resolution) you can do the following:
+Finally, if the images are too large for your computer to process and you would like to downscale the image (e.g 50% resolution) you can do the following:
 ```
-python3 main.py ./czi ./stitched --reference DAPI --resolution 0.325 —-finalimage -y --downsize --factor 0.5
+python3 main.py ./czi ./stitched --reference DAPI --resolution 0.325 --finalimage -y --downscale --factor 0.5
 ```
 ## What does the code do
 
