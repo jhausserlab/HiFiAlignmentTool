@@ -74,13 +74,6 @@ parser.add_argument(
   default=False,
   help='Saves all the channels into one image and removes all dapis except from the first image'
 )
-parser.add_argument(
-  '--getdim',
-  action='store_const',
-  const=True,
-  default=False,
-  help='If you already have tif images and you do not do czi stitching, use this argument to create the image_shape.txt'
-)
 
 args = parser.parse_args()
 

@@ -142,7 +142,7 @@ def run(args):
     if not args.yes:
       ask_for_approval()
 
-    if args.getdim:
+    if args.disable_stitching:
       get_img_dim(source)
     channel_check(args, source)
     get_aligned_images(args, source)
