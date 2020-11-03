@@ -1,7 +1,5 @@
 Filename,Cy3,Cy5,Cy7,GFP,DAPI
-r2,b,c,d,e,a
-r1,g,h,i,j,f
-r3,l,m,n,o,k
-r6,q,r,,,p
-r4,t,,u,v,s
-r5,,x,y,z,w
+test4,,b,c,d,a
+test1,f,g,h,i,e
+test6,,,k,l,j
+test2,n,o,p,q,m
