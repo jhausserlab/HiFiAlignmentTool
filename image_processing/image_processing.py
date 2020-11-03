@@ -10,6 +10,7 @@ import gc
 import pandas as pd
 
 def get_czifiles(source):
+  #Fetches the czi filenames in the source folder
     data_strct = pd.read_csv("channel_name.csv")
     file_name = []
     name_header = data_strct.columns[0]
@@ -23,12 +24,14 @@ def get_czifiles(source):
     return file_name
 
 def list_files(source, files):
+  #List the file names in the terminal to verify that you have the files you want
   file_names = '\n'.join(files)
   file_list = f'''Found the following image files in {source}: \n\n{file_names}\n'''
 
   print(file_list)
 
 def ask_for_approval():
+  # if argument -y is not pput, before each processing, this is asked to be sure that the user wants to proceed
   hasApproval = False
 
   while not hasApproval:
@@ -60,6 +63,8 @@ def write(args, file, image):
       print('destination path does not exist')
 
 def channel_check(args, source):
+  # Verifies that the CSV file is compatible with the image shape and 
+  # that the images called in CSV all have the reference channel
   print('------- Verifying that CSV file matches images -------')
   ref = args.reference
   data_strct = pd.read_csv("channel_name.csv")
@@ -99,6 +104,8 @@ def channel_check(args, source):
   print('------- CSV file matches images and all images have the reference channel -------')
 
 def get_img_dim(source):
+  #If stitching is not done, the images in source will be loaded and the dimension is saved in a txt file.
+  #This file is needed for further processing
   print('----- Extracting image dimensions and putting them in image_shape.txt -----')
   files = get_tiffiles(source)
   file_name = open(source +'/image_shape.txt',"w")

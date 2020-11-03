@@ -10,6 +10,7 @@ from sys import getsizeof
 import pandas as pd
 
 def get_filename():
+  #Get the filename from the CSV file.
   data_strct = pd.read_csv("channel_name.csv")
   file_name = []
   name_header = data_strct.columns[0]
@@ -19,6 +20,7 @@ def get_filename():
   return file_name
 
 def get_tiffiles(source):
+  #Fetches the tif filenames in the source folder
     data_strct = pd.read_csv("channel_name.csv")
     name_header = data_strct.columns[0]
     file_name = []
@@ -32,6 +34,7 @@ def get_tiffiles(source):
     return file_name
 
 def get_aligned_marker_names(ref):
+  #creates a .txt folder that has the marker names in the correct order for the aligned images
   data = pd.read_csv("channel_name.csv")
   #create a list of the channel names. in the order that they were saved as in CZI
   name_header = data.columns[0]
@@ -61,6 +64,7 @@ def get_aligned_marker_names(ref):
   file_name.close()
 
 def get_final_marker_names(ref):
+  #creates a .txt folder that has the marker names in the correct order for the final image
   file_al = open("./aligned/marker_names_al.txt","r")
   data = pd.read_csv("channel_name.csv")
   marker_al = file_al.readlines()
@@ -102,7 +106,6 @@ def get_max_shape(source):
 
 def pad_image(i_max, j_max, image):
   #pads the images if the dimensions are not the same for all of them
-  #image must be of dimension X,Y so we input channels not the whole image C,X,Y
   i_diff = i_max - np.shape(image)[0]
   j_diff = j_max - np.shape(image)[1]
 
@@ -112,7 +115,7 @@ def pad_image(i_max, j_max, image):
   return padded_image
 
 def get_metadata(filename, img_shape, mrk_nm, resolution):
-  #name of the file you are running, shape of the image, the name of the channels, the scale of the image (pxl = XX um)
+  #name of the file you are running, shape of the image, the name of the markers, the scale of the image (pxl = XX um)
   mdata = '''<?xml version="1.0" encoding="UTF-8" standalone="no"?><!-- Warning: this comment is an OME-XML metadata block, which contains crucial dimensional parameters and other important metadata. Please edit cautiously (if at all), and back up the original data before doing so. For more information, see the OME-TIFF web site: https://docs.openmicroscopy.org/latest/ome-model/ome-tiff/. --><OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Creator="OME Bio-Formats 6.5.1" UUID="urn:uuid:e152586d-4214-4027-a620-edb3f6cfc6af" xsi:schemaLocation="http://www.openmicroscopy.org/Schemas/OME/2016-06 http://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd">'''
   mdata = mdata + '''<Image ID="Image:0" Name="'''+filename+'''">'''
   mdata = mdata + '''<Pixels ID="Pixels:0" DimensionOrder="XYCZT" PhysicalSizeX="'''+str(resolution)+'''" PhysicalSizeY="'''+str(resolution)+'''" Type="uint16" SizeX="'''+str(img_shape[2])+'''" SizeY="'''+str(img_shape[1])+'''" SizeC="'''+str(img_shape[0])+'''" SizeZ="1" SizeT="1">'''
@@ -124,7 +127,6 @@ def get_metadata(filename, img_shape, mrk_nm, resolution):
 
 def get_aligned_images(args, source):
   #function used to do registration on all images with respect to the first image of the file list.
-
   files = get_tiffiles(source)
   filename = get_filename()
   ref = args.reference
@@ -186,7 +188,7 @@ def get_aligned_images(args, source):
   del chan_ref
   gc.collect()
 
-  # We have our reference channel, now we go get our image to align
+  # We have our reference channel, now we go get our channel to align
   for idx in range(len(filename)):
     print('--- Aligning tif:', files[idx])
     tif_mov = tifffile.imread(source +'/'+ files[idx])
@@ -281,7 +283,7 @@ def get_aligned_images(args, source):
     del tif_mov
     gc.collect()
     
-    #To put the marker names in the metadata and also the resolution
+    #To put the marker names in the metadata and also the scale/resolution
     marker_names_al = open('./aligned/marker_names_al.txt',"r")
     marker_al = marker_names_al.readlines()
     mrk_nm = []
