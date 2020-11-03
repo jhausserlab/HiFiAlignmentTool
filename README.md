@@ -33,6 +33,9 @@ From the folder where you are launching the code, you will have:
 - **main.py** the main script to run all the code
 - **installLib.py** the script to install all librairies required for the code
 
+**Please** respect the CSV file structure with: the name of the CSV called channel_name.csv, the filenames as the rows and the channels as the columns.
+The structure given in the mock dataset is the right one. 
+
 Here is how your folder should look like where you run the code:
 <p align="center">
   <img src="structure.png"  width="500" height="300">
