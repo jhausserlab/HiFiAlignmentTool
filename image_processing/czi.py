@@ -6,7 +6,7 @@ import tifffile
 import gc
 from sys import getsizeof
 
-def get_stitched_czis(args, czi):
+def get_stitched_czi(czi):
   #stitches the czi images. It returns a np.array of uint16.
   data = []
   dims_shape = czi.dims_shape()
@@ -29,18 +29,11 @@ def get_stitched_czis(args, czi):
 
   return np.array(data)
 
-def get_czis(files):
-  # Takes the string of files and creates np.array of the czi images 
-  # The array consists of CZI images not transformed to full images yet.
-  czis = []
-  for file in files:
-    czis.append(aicspylibczi.CziFile(pathlib.Path(file)))
-  return np.array(czis)
-
-def get_images(args, file):
+def get_image(source, file):
   #Takes file as argument and returns the stitched images of the file
-  print('--- Processing:', file.split())
-  stitched_czi = get_stitched_czis(args,get_czis(file.split())[0])
+  print('--- Processing:', source + '/' + file)
+  czi = aicspylibczi.CziFile(pathlib.Path(source + '/' + file ))
+  stitched_czi = get_stitched_czi(czi)
   print('Shape of stitched shape: ', np.shape(stitched_czi), 'of size', getsizeof(np.array(stitched_czi))/10**6, 'MB')
   return stitched_czi
   

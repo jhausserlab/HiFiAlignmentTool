@@ -11,8 +11,14 @@ def dir_path(string):
 
 parser = argparse.ArgumentParser(description='Microscopy Image processing')
 
-parser.add_argument('source', type=dir_path, help='input path, the folder of czi to stitch')
-parser.add_argument('destination', type=dir_path, help='output path, the folder where to put the stitched images')
+parser.add_argument(
+  'source', 
+  type=dir_path, 
+  help='input path, the folder of czi to stitch')
+parser.add_argument(
+  'destination', 
+  type=dir_path, 
+  help='output path, the folder where to put the stitched images')
 parser.add_argument(
   '-y',
   '--yes',
@@ -21,6 +27,18 @@ parser.add_argument(
   default=False,
   help='generate image without asking any questions'
 )
+parser.add_argument(
+  '--reference', 
+  type = str,
+  default='DAPI',
+  help ='The reference channel that will be used for registration, based on the csv file (defaut is DAPI)'
+)
+parser.add_argument(
+  '--resolution', 
+  type = float,
+  default=0.325,
+  help ='Resolution of the original image: what does 1 pixel represent in micrometers (default is 0.325)'
+) 
 parser.add_argument(
   '--disable-stitching',
   action='store_const',
@@ -45,10 +63,8 @@ parser.add_argument(
 )
 parser.add_argument(
   '--factor', 
-  metavar ='N', 
   type = float,
-  nargs ='+', 
-  default=[0.33],
+  default=0.33,
   help ='Scale factor between 0. - 1. (needs --downscale to work else it is full resolution)'
 ) 
 parser.add_argument(
@@ -56,7 +72,7 @@ parser.add_argument(
   action='store_const',
   const=True,
   default=False,
-  help='Saves all the channels into one image and removes all dapis except from the first image'
+  help='Saves all the channels into one image and removes all reference channels except from the first image'
 )
 
 args = parser.parse_args()

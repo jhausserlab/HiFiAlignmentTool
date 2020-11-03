@@ -1,2 +1,0 @@
-empty file so that the folder can be pushed into GitHub.
-Once you have downloaded the folder, you can delete this!
