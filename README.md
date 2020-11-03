@@ -13,7 +13,7 @@ The images do not need to have the same dimension X,Y as the code will pad all i
 
 Download the folder from Github.
 
-From the **terminal**, access that folder using **cd** to arrive to that file path, as it will be used as the working directory.
+From the **terminal**, access that folder using **cd** to arrive to that folder path, as it will be used as the working directory.
 
 To install the required librairies for the code, you can run in the terminal from that folder:
 
@@ -30,6 +30,8 @@ From the folder where you are launching the code, you will have:
 - an EMPTY folder called **aligned** (where registered images will be saved).
 - **channel_name.csv** with the experimental layout of the images (a matrix with files x channels and in the cross section the respective marker).
 - **image_processing** folder with the python scripts.
+- **main.py** the main script to run all the code
+- **installLib.py** the script to install all librairies required for the code
 
 Here is how your folder should look like where you run the code:
 <p align="center">
@@ -53,7 +55,7 @@ To run main.py you need to run at least the 2 arguments "source" and "destinatio
 ```
 python3 main.py ./czi ./stitched
 ```
-main.py has also 6 optional arguments:
+main.py has also 8 optional arguments:
 1. -y, --yes --> runs the code without asking questions before stitching and before registration
 2. --reference CHAN --> in place of chan put the channel you want to align with (DAPI by default)
 3. --resolution XX --> the resolution of input images in um/pixel which will be added in the metadata(0.325 um by default)
@@ -62,13 +64,29 @@ main.py has also 6 optional arguments:
 6. -d, --downscale --> if you want to reduce the resolution of your image (default is 0.33) if your image is too large for processing.
 7. --factor 0.XX --> the downscale factor you want between 0 and 1 ( the argument --downscale is required else it is full resolution that is done)
 8. --finalimage --> if you want to save the final image containing all the channels without the reference channel except for the one used as reference for registration
-9. --getdim --> if you have your stitched images (tif or ome.tif) already you can use this argument to get the image_shape.txt file which is needed for further registration. 
+
 
 if you want more information on the arguments run
 ```
 python3 main.py --help
 ```
 
+## Test code
+
+When downloading the github folder, you have a mock image set with its respective csv folder. For demonstration purposes the markers are named a letter in alphabetical order with respect to the reference channel. 
+To ensure the code is running and to also try the different options, you can work with this small image set.
+First of all I suggest to run the following code
+```
+python3 main.py ./czi ./stitched --reference DAPI --resolution 0.325 —-finalimage
+```
+This will stitch, register and save the final image and ask you to confirm for every step. Once this works, you can skip the ask for approval part by adding -y like so:
+```
+python3 main.py ./czi ./stitched --reference DAPI --resolution 0.325 —-finalimage -y
+```
+Finally, if the images are too large for your computer to process and you would like to downsize the image (e.g 50% resolution) you can do the following:
+```
+python3 main.py ./czi ./stitched --reference DAPI --resolution 0.325 —-finalimage -y --downsize --factor 0.5
+```
 ## What does the code do
 
 **STITCHING**
@@ -80,22 +98,22 @@ python3 main.py --help
 
 **IMAGE REGISTRATION**
 
-0. If --getdim, load each image and save the dimensions in a txt file.
-1. Load the first image in the list which will be used as the reference
+0. If no stitching done, load each image and save the dimensions in a txt file.
+1. Load the first image in the csv list which will be used as the reference
 2. Extract reference channel which is used for alignment using the CSV file.
 3. Delete other channels
 4. Load the next image i and extract reference channel used to align (delete other channels)
-5. Pad image if needed
+5. Pad images if needed
 6. Rescale if asked in command line
 7. Do image registration on chan_ref and chan_i using pystackreg library
 8. Transform the other channels of image i with the known transformation
-9. Save the registered images in ome.tif into the folder aligned. They are saved with metadata for the channel names and scale of the image
+9. Save the registered images in ome.tif into the folder aligned. They are saved with metadata for the channel names and scale of the image (changes the scale accordingly if downsized)
 10. Restart from step 4. with the next image
 11. Save a txt file with the marker names in the right order with the new images based on the CSV file (MARKER_CHANNEL_FILE)
 
 **FINAL IMAGE**
 1. Loads the first image into an array
-2. Loads the next image and removes dapi
+2. Loads the next image and removes reference channel
 3. Repeat step 2 until the end
 4. Final image is saved in ome.tif in the main folder where you run the code. It is saved with metadata for the channel names and scale of the image
 5. Save a txt file with the marker names in the right order for the final image based on the CSV file (MARKER_CHANNEL_FILE)
