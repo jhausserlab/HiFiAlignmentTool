@@ -71,26 +71,6 @@ if you want more information on the arguments run
 python3 main.py --help
 ```
 
-## Test code
-
-When downloading the github folder, you have a mock image set with its respective csv file. For demonstration purposes the markers are named a letter in alphabetical order with respect to the reference channel. 
-To ensure the code is running and to also try the different options, you can work with this small image set.
-First of all I suggest to run the following code
-```
-python3 main.py ./czi ./stitched --reference DAPI --resolution 0.325 --finalimage
-```
-This will stitch, register and save the final image and ask you to confirm for every step. Once this works, you can skip the ask for approval part by adding -y like so:
-```
-python3 main.py ./czi ./stitched --reference DAPI --resolution 0.325 --finalimage -y
-```
-Finally, if the images are too large for your computer to process and you would like to downscale the image (e.g 50% resolution) you can do the following:
-```
-python3 main.py ./czi ./stitched --reference DAPI --resolution 0.325 --finalimage -y --downscale --factor 0.5
-```
-
-NB: The small set of image is taken froma region where the stitching from czi was poorly done, thus there are shifts in the image. 
-I'll try to find another image set which doesn't have the stitching zone. 
-In the meantime, this is just to help you run and understand how the code works.
 ## What does the code do
 
 **STITCHING**
@@ -123,6 +103,27 @@ In the meantime, this is just to help you run and understand how the code works.
 5. Save a txt file with the marker names in the right order for the final image based on the CSV file (MARKER_CHANNEL_FILE)
 
 It is important to note that the loading of the file paths are done in the order given in the CSV file. The CSV file must be correct for proper running of the code!
+
+## Test code
+
+When downloading the github folder, you have a mock image set with its respective csv file. For demonstration purposes the markers are named a letter in alphabetical order with respect to the reference channel. 
+To ensure the code is running and to also try the different options, you can work with this small image set.
+First of all, run the following code
+```
+python3 main.py ./czi ./stitched --reference DAPI --resolution 0.325 --finalimage
+```
+This will stitch, register and save the final image and ask you to confirm for every step. Once this works, you can skip the ask for approval part by adding -y like so:
+```
+python3 main.py ./czi ./stitched --reference DAPI --resolution 0.325 --finalimage -y
+```
+Finally, if the images are too large for your computer to process and you would like to downscale the image (e.g 50% resolution) you can do the following:
+```
+python3 main.py ./czi ./stitched --reference DAPI --resolution 0.325 --finalimage -y --downscale --factor 0.5
+```
+
+NB: The small set of image is taken froma region where the stitching from czi was poorly done, thus there are shifts in the image. 
+This is just to help you run and understand how the code works.
+
 
 NB: The image registration is done thanks to pystackreg library. In this code, RIGID_BODY (translation + rotation) is hard coded as it is the most consistent. However you can also add scaling or scaling + shear. If you want to change the registration process you need to access the script registration.py and modify the line: **sr = StackReg(StackReg.RIGID_BODY)** replace RIGID_BODY with: SCALED_ROTATION or AFFINE.
 See https://pystackreg.readthedocs.io/en/latest/ for more information on the registration process.
