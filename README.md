@@ -73,7 +73,7 @@ python3 main.py --help
 
 ## Test code
 
-When downloading the github folder, you have a mock image set with its respective csv folder. For demonstration purposes the markers are named a letter in alphabetical order with respect to the reference channel. 
+When downloading the github folder, you have a mock image set with its respective csv file. For demonstration purposes the markers are named a letter in alphabetical order with respect to the reference channel. 
 To ensure the code is running and to also try the different options, you can work with this small image set.
 First of all I suggest to run the following code
 ```
