@@ -16,8 +16,8 @@ def get_czifiles(source):
     name_header = data_strct.columns[0]
     for i in range(data_strct.shape[0]):
       try:
-        filepath = glob.glob(source+'/'+data_strct[name_header][i]+'*.czi', recursive=True)[0]
-        file_name.append(filepath.split('/')[2])
+        filepath = glob.glob(os.path.join(source,data_strct[name_header][i])+'*.czi', recursive=True)[0]
+        file_name.append(os.path.split(filepath)[-1])
       except IndexError:
         raise IndexError('Filename in CSV ---',data_strct[name_header][i],'--- does not match that of the file in folder',source) from None
 
@@ -89,7 +89,7 @@ def channel_check(args, source):
         idx_values[data_strct.columns[j+1]][i] = idx
         idx += 1
 
-  file = open(source + '/image_shape.txt','r')
+  file = open(os.path.join(source,'image_shape.txt'),'r')
   images_shape = file.read()
   split = images_shape.split(';')
   for i in range(len(split)-1):
@@ -108,9 +108,9 @@ def get_img_dim(source):
   #This file is needed for further processing
   print('----- Extracting image dimensions and putting them in image_shape.txt -----')
   files = get_tiffiles(source)
-  file_name = open(source +'/image_shape.txt',"w")
+  file_name = open(os.path.join(source,'image_shape.txt'),"w")
   for i in range(len(files)):
-    tif = tifffile.imread(source +'/'+ files[i])
+    tif = tifffile.imread(os.path.join(source,files[i]))
     file_name.write(str(np.shape(tif)[0])+','+str(np.shape(tif)[1])+','+str(np.shape(tif)[2])+';')
     del tif
     gc.collect()
@@ -128,7 +128,7 @@ def run(args):
 
     # To reset the txt file. Often during my testing I would forget and that created errors.
     # In case others do the same thing. This will help
-    file_name = open(args.destination +'/image_shape.txt',"w")
+    file_name = open(os.path.join(args.destination,'image_shape.txt'),"w")
     file_name.write('')
     file_name.close()
     for file in files:
