@@ -22,8 +22,11 @@ def get_stitched_czi(czi):
   for channel in range(channels):
     mosaic = czi.read_mosaic(C=channel, scale_factor=1)
     print('info – channel', channel, 'stitched')
-    data.append(mosaic[0,0,:,:])
 
+    #IF WINDOWS USE UNCOMMENT THE LINE BELOW AND COMMENT THE OTHER ONE
+    data.append(mosaic[0,:,:])
+    #IF MAC/LINUX UNCOMMENT THE LINE BELOW AND COMMENT THE OTHER ONE
+    #data.append(mosaic[0,0,:,:])
     del mosaic
     gc.collect()
 
