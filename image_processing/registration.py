@@ -3,6 +3,7 @@ from skimage.transform import rescale
 from pystackreg import StackReg
 import glob
 import gc
+import os
 import sys
 import tifffile
 from sys import getsizeof
@@ -26,8 +27,8 @@ def get_tiffiles(source):
     file_name = []
     for i in range(data_strct.shape[0]):
       try:
-        filepath = glob.glob(source+'/'+data_strct[name_header][i]+'*.tif', recursive=True)[0]
-        file_name.append(filepath.split('/')[2])
+        filepath = glob.glob(os.path.join(source,data_strct[name_header][i])+'*.tif', recursive=True)[0]
+        file_name.append(os.path.split(filepath)[-1])
       except IndexError:
         raise IndexError('Filename in CSV ---',data_strct[name_header][i],'--- does not match that of the file in folder',source) from None
 
@@ -88,7 +89,7 @@ def get_final_marker_names(ref):
 
 def get_max_shape(source):
   #this function gets the maximum dimensions from all the images that are going to be registered
-  filepath = glob.glob(source + '/**/image_shape.txt', recursive=True)
+  filepath = glob.glob(os.path.join(source,'image_shape.txt'), recursive=True)
   print ('Getting max dimensions with: ',filepath)
   file = open(filepath[0],'r')
   images_shape = file.read()
@@ -153,7 +154,7 @@ def get_aligned_images(args, source):
 
   print('Reference channel used is:', ref)
   print ('Reference image is from:', files[0])
-  tif_ref = tifffile.imread(source +'/'+ files[0])
+  tif_ref = tifffile.imread(os.path.join(source,files[0]))
 
   print('Loaded tif_ref', getsizeof(tif_ref)/10**6, 'MB')
   chan_ref = np.array(tif_ref[idx_values[ref][idx_values[name_header] == filename[0]].values[0]])
@@ -191,7 +192,7 @@ def get_aligned_images(args, source):
   # We have our reference channel, now we go get our channel to align
   for idx in range(len(filename)):
     print('--- Aligning tif:', files[idx])
-    tif_mov = tifffile.imread(source +'/'+ files[idx])
+    tif_mov = tifffile.imread(os.path.join(source,files[idx]))
     print('Shape of image is: ', np.shape(tif_mov), 'size', getsizeof(tif_mov)/10**6, 'MB')
     print('------- Reference Channel idx in the image:',idx_values[ref][idx_values[name_header] == filename[idx]].values[0] + 1)
     chan_mov = np.array(tif_mov[idx_values[ref][idx_values[name_header] == filename[idx]].values[0]])
@@ -311,7 +312,7 @@ def final_image(args,source):
   resolution = args.resolution
   get_final_marker_names(ref)
   files = get_tiffiles(source)
-  tif = tifffile.imread(source +'/'+ files[0])
+  tif = tifffile.imread(os.path.join(source,files[0]))
 
   if args.downscale:
     resolution = round(resolution/args.factor,3)
@@ -321,7 +322,7 @@ def final_image(args,source):
 
   for idx in range(len(files)-1):
     print('--- Adding:', files[idx+1])
-    tif = tifffile.imread(source +'/'+ files[idx+1])
+    tif = tifffile.imread(os.path.join(source,files[idx+1]))
     print('Tif shape', np.shape(tif))
     tif = np.delete(tif, 0, 0)
     print('Removed alignment channel', np.shape(tif))
