@@ -6,8 +6,8 @@ import tifffile
 import gc
 from sys import getsizeof
 
-def get_stitched_czi(czi):
-  #stitches the czi images. It returns a np.array of uint16.
+def get_reassembled_czi(czi):
+  #Reassembles the czi images. It returns a np.array of uint16.
   data = []
   dims_shape = czi.dims_shape()
 
@@ -21,11 +21,11 @@ def get_stitched_czi(czi):
 
   for channel in range(channels):
     mosaic = czi.read_mosaic(C=channel, scale_factor=1)
-    print('info – channel', channel, 'stitched')
+    print('info – channel', channel, 'reassembled')
 
-    #IF WINDOWS USE UNCOMMENT THE LINE BELOW AND COMMENT THE OTHER ONE
+    #IF WINDOWS, UNCOMMENT THE LINE BELOW AND COMMENT THE OTHER ONE
     data.append(mosaic[0,:,:])
-    #IF MAC/LINUX UNCOMMENT THE LINE BELOW AND COMMENT THE OTHER ONE
+    #IF MAC/LINUX, UNCOMMENT THE LINE BELOW AND COMMENT THE OTHER ONE
     #data.append(mosaic[0,0,:,:])
     del mosaic
     gc.collect()
@@ -33,10 +33,10 @@ def get_stitched_czi(czi):
   return np.array(data)
 
 def get_image(source, file):
-  #Takes file as argument and returns the stitched images of the file
+  #Takes file as argument and returns the reassembled images of the file
   print('--- Processing:', source + '/' + file)
   czi = aicspylibczi.CziFile(pathlib.Path(source + '/' + file ))
-  stitched_czi = get_stitched_czi(czi)
-  print('Shape of stitched shape: ', np.shape(stitched_czi), 'of size', getsizeof(np.array(stitched_czi))/10**6, 'MB')
-  return stitched_czi
+  reassembled_czi = get_reassembled_czi(czi)
+  print('Shape of reassembled_czi shape: ', np.shape(reassembled_czi), 'of size', getsizeof(np.array(reassembled_czi))/10**6, 'MB')
+  return reassembled_czi
   

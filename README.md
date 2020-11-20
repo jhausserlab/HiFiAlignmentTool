@@ -1,7 +1,7 @@
 # Microscopy Image Processing
 
 Code to register czi microscopy images or OME.TIF/TIF with **python 3**.
-This code is optimised at a memory level to be able to stitch and register (translation + rotation) high resolution images in **ome.tif**. 
+This code is optimised at a memory level to be able to reassemble and register (translation + rotation) high resolution images in **ome.tif**. 
 
 Currently, for images of dimension 16'000 x 21'000 pixels the computer uses a maximum of 52GB to run all the code.
 I recommend these dimensions (give or take ~1000 pixels) if you are using a 64GB RAM computer. 
@@ -26,7 +26,7 @@ After having done so, you can remove this script if desired.
 
 From the folder where you are launching the code, you will have:
 - a folder **czi**, where the czi files that you want to process will be stored (which will be the "source").
-- an EMPTY folder called **stitched** (where stitched images and image dimension will be save, it will be the "destination").
+- an EMPTY folder called **reassembled** (where reassembled images and image dimension will be save, it will be the "destination").
 - an EMPTY folder called **aligned** (where registered images will be saved).
 - **channel_name.csv** with the experimental layout of the images (a matrix with files x channels and in the cross section the respective marker).
 - **image_processing** folder with the python scripts.
@@ -49,22 +49,24 @@ If you have downloaded the folder from Github, you should have the same structur
 - **structure.png**
 - ./czi/**empty.txt**
 - ./aligned/**empty.txt**
-- ./stitched/**image_shape.txt**
+- ./reassembled/**image_shape.txt**
+
+**WARNING:** The code is set for Windows computer, if you are running on a Mac or Linux please go in the script **czi.py**, comment with '#' line 27 and remove the '#' in line 29
 
 
-**WARNING:** If you are running a new set of czi, it is important that the conditions previously mentioned are met (meaning: stitched folder is empty, aligned folder is empty,  czi folder has only the czis you want to process, channel_name.csv has the correct layout). Else "old" files will be read with the new ones.
+**WARNING:** If you are running a new set of czi, it is important that the conditions previously mentioned are met (meaning: reassembled folder is empty, aligned folder is empty,  czi folder has only the czis you want to process, channel_name.csv has the correct layout). Else "old" files will be read with the new ones.
 
 To run main.py you need to run at least the 2 arguments "source" and "destination" (with the example of the structure in the image, which is what you downloaded):
 ```
-python3 main.py ./czi ./stitched
+python3 main.py ./czi ./reassembled
 ```
 main.py has also 8 optional arguments:
-1. -y, --yes --> runs the code without asking questions before stitching and before registration
+1. -y, --yes --> runs the code without asking questions before reassembling and before registration
 2. --reference CHAN --> in place of chan put the channel you want to align with (DAPI by default)
 3. --resolution XX --> the resolution of input images in um/pixel which will be added in the metadata(0.325 um by default)
-4. --disable-stitching --> if you want to skip the stitching
+4. --disable-reassemble --> if you want to skip the reassembling
 5. --disable-registration --> if you want to skip the image registeration
-6. -d, --downscale --> if you want to reduce the resolution of your image (default is 0.33) if your image is too large for processing.
+6. --downscale --> if you want to reduce the resolution of your image (default is 0.33) if your image is too large for processing.
 7. --factor 0.XX --> the downscale factor you want between 0 and 1 ( the argument --downscale is required else it is full resolution that is done)
 8. --finalimage --> if you want to save the final image containing all the channels without the reference channel except for the one used as reference for registration
 
@@ -76,16 +78,16 @@ python3 main.py --help
 
 ## What does the code do
 
-**STITCHING**
+**REASSEMBLING**
 1. Load the czi file paths
-2. Take one czi file and stitch the image
+2. Take one czi file and reassemble the image
 3. Save the dimensions of the image in a txt file called "images_shape.txt" in the "destination" folder
-4. Save the stitched image in ome.tif in the "destination" folder
+4. Save the reassembled image in ome.tif in the "destination" folder
 5. Restart from step 2 for the next czi file.
 
 **IMAGE REGISTRATION**
 
-0. If no stitching done, load each image and save the dimensions in a txt file.
+0. If no reassembling done, load each image and save the dimensions in a txt file.
 1. Load the first image in the csv list which will be used as the reference
 2. Extract reference channel which is used for alignment using the CSV file.
 3. Delete other channels
@@ -113,17 +115,17 @@ When downloading the github folder, you have a mock image set with its respectiv
 To ensure the code is running and to also try the different options, you can work with this small image set.
 First of all, run the following code
 ```
-python3 main.py ./czi ./stitched --reference DAPI --resolution 0.325 --finalimage
+python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 --finalimage
 ```
-This will stitch, register and save the final image and ask you to confirm for every step. Once this works, you can skip the ask for approval part by adding -y like so:
+This will reassemble, register and save the final image and ask you to confirm for every step. Once this works, you can skip the ask for approval part by adding -y like so:
 ```
-python3 main.py ./czi ./stitched --reference DAPI --resolution 0.325 --finalimage -y
+python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 --finalimage -y
 ```
 Finally, if the images are too large for your computer to process and you would like to downscale the image (e.g 50% resolution) you can do the following:
 ```
-python3 main.py ./czi ./stitched --reference DAPI --resolution 0.325 --finalimage -y --downscale --factor 0.5
+python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 --finalimage -y --downscale --factor 0.5
 ```
-The small set of image is taken from a region where the stitching from czi was poorly done, thus there are shifts in the image. 
+The small set of image is taken from a region where the reassembling from czi was poorly done, thus there are shifts in the image. 
 This is just to help you run and understand how the code works.
 
 

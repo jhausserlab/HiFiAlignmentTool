@@ -46,14 +46,14 @@ def ask_for_approval():
 
 def write(args, file, image):
   #saves a txt file with the images dimensions (C,X,Y) to know if padding will be required during registration
-  #saves the stitched image in the destination file
+  #saves the reassembled image in the destination file
   if args.destination:
     if os.path.exists(args.destination):
       name = file.split('.')[0]
       name_txt = 'image_shape'
       file = f'{os.path.basename(args.destination)}/{name}'
 
-      with tifffile.TiffWriter(file  + '_st.ome.tif', bigtiff = True) as tif:
+      with tifffile.TiffWriter(file  + '.ome.tif', bigtiff = True) as tif:
         tif.save(image)
 
       with open(f'{os.path.basename(args.destination)}/{name_txt}' + '.txt', 'a') as f:
@@ -104,7 +104,7 @@ def channel_check(args, source):
   print('------- CSV file matches images and all images have the reference channel -------')
 
 def get_img_dim(source):
-  #If stitching is not done, the images in source will be loaded and the dimension is saved in a txt file.
+  #If reassembling is not done, the images in source will be loaded and the dimension is saved in a txt file.
   #This file is needed for further processing
   print('----- Extracting image dimensions and putting them in image_shape.txt -----')
   files = get_tiffiles(source)
@@ -118,7 +118,7 @@ def get_img_dim(source):
 
 def run(args):
   #runs the different steps of the code: - stiching - registration - save all in one image
-  if not args.disable_stitching:
+  if not args.disable_reassemble:
     source = args.source
     files = get_czifiles(source)
     list_files(source, files)
@@ -139,7 +139,7 @@ def run(args):
       del image
       gc.collect()
   else:
-    print("------- No stitching done -------")
+    print("------- No Reassembling done -------")
 
   if not args.disable_registration:
     source = args.destination
@@ -149,7 +149,7 @@ def run(args):
     if not args.yes:
       ask_for_approval()
 
-    if args.disable_stitching:
+    if args.disable_reassemble:
       get_img_dim(source)
     channel_check(args, source)
     get_aligned_images(args, source)
