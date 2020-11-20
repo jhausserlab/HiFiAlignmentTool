@@ -14,11 +14,11 @@ parser = argparse.ArgumentParser(description='Microscopy Image processing')
 parser.add_argument(
   'source', 
   type=dir_path, 
-  help='input path, the folder of czi to stitch')
+  help='input path, the folder of czi to reassemble')
 parser.add_argument(
   'destination', 
   type=dir_path, 
-  help='output path, the folder where to put the stitched images')
+  help='output path, the folder where to put the reassembled images')
 parser.add_argument(
   '-y',
   '--yes',
@@ -40,11 +40,11 @@ parser.add_argument(
   help ='Resolution of the original image: what does 1 pixel represent in micrometers (default is 0.325)'
 ) 
 parser.add_argument(
-  '--disable-stitching',
+  '--disable-reassemble',
   action='store_const',
   const=True,
   default=False,
-  help='disable stitching of czi file into an image'
+  help='disable reassembling of czi file into an image'
 )
 parser.add_argument(
   '--disable-registration',
@@ -54,7 +54,6 @@ parser.add_argument(
   help='disable image registration'
 )
 parser.add_argument(
-  '-d',
   '--downscale',
   action='store_const',
   const=True,
