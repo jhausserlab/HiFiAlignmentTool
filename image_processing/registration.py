@@ -27,7 +27,21 @@ def get_tiffiles(source):
     file_name = []
     for i in range(data_strct.shape[0]):
       try:
-        filepath = glob.glob(os.path.join(source,data_strct[name_header][i])+'*.tif', recursive=True)[0]
+        filepath = glob.glob(os.path.join(source,data_strct[name_header][i])+'.ome.tif', recursive=True)[0]
+        file_name.append(os.path.split(filepath)[-1])
+      except IndexError:
+        raise IndexError('Filename in CSV ---',data_strct[name_header][i],'--- does not match that of the file in folder',source) from None
+
+    return file_name
+
+def get_aligned_tiffiles(source):
+  #Fetches the tif filenames in the source folder
+    data_strct = pd.read_csv("channel_name.csv")
+    name_header = data_strct.columns[0]
+    file_name = []
+    for i in range(data_strct.shape[0]):
+      try:
+        filepath = glob.glob(os.path.join(source,data_strct[name_header][i])+'_al.ome.tif', recursive=True)[0]
         file_name.append(os.path.split(filepath)[-1])
       except IndexError:
         raise IndexError('Filename in CSV ---',data_strct[name_header][i],'--- does not match that of the file in folder',source) from None
@@ -311,7 +325,7 @@ def final_image(args,source):
   ref = args.reference
   resolution = args.resolution
   get_final_marker_names(ref)
-  files = get_tiffiles(source)
+  files = get_aligned_tiffiles(source)
   tif = tifffile.imread(os.path.join(source,files[0]))
 
   if args.downscale:

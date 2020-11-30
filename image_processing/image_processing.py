@@ -4,7 +4,7 @@ import os
 import tifffile
 import pathlib
 from image_processing.czi import get_image
-from image_processing.registration import get_tiffiles, get_aligned_images, final_image
+from image_processing.registration import get_tiffiles, get_aligned_images, final_image, get_aligned_tiffiles
 from sys import getsizeof
 import gc
 import pandas as pd
@@ -16,7 +16,7 @@ def get_czifiles(source):
     name_header = data_strct.columns[0]
     for i in range(data_strct.shape[0]):
       try:
-        filepath = glob.glob(os.path.join(source,data_strct[name_header][i])+'*.czi', recursive=True)[0]
+        filepath = glob.glob(os.path.join(source,data_strct[name_header][i])+'.czi', recursive=True)[0]
         file_name.append(os.path.split(filepath)[-1])
       except IndexError:
         raise IndexError('Filename in CSV ---',data_strct[name_header][i],'--- does not match that of the file in folder',source) from None
@@ -158,7 +158,7 @@ def run(args):
 
   if args.finalimage:
     source = './aligned'
-    files = get_tiffiles(source)
+    files = get_aligned_tiffiles(source)
     list_files(source,files)
 
     if not args.yes:
