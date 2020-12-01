@@ -35,6 +35,7 @@ From the folder where you are launching the code, you will have:
 
 **Please** respect the CSV file structure with: the name of the CSV called channel_name.csv, the filenames as the rows and the channels as the columns.
 The structure given in the mock dataset is the right one. 
+**WARNING:** Do not put underscore ('_') in any of the names in the CSV files (whether marker names, filenames or channel names). This **will** cause errors in the processing of the images
 
 Here is how your folder should look like where you run the code:
 <p align="center">

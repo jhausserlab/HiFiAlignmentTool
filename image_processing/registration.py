@@ -88,7 +88,7 @@ def get_final_marker_names(ref):
       marker_names_final.append(i)
   file_al.close()
 
-  for i in range(len(marker_names_final)-data.shape[0]):
+  for i in range(len(marker_names_final)-data.shape[0]+1):
     if (marker_names_final[i].split('_')[1] == ref):
       if i != 0:
         print('Removed reference channel', i,'called', marker_names_final[i])
