@@ -305,7 +305,7 @@ def get_aligned_images(args, source):
     marker_al = marker_names_al.readlines()
     mrk_nm = []
     for mrk in range(len(marker_al)):
-      if marker_al[mrk].split('_')[2].split('\n')[0] == filename[idx]:
+      if marker_al[mrk].split('|')[2].split('\n')[0] == filename[idx]:
         mrk_nm.append(marker_al[mrk].split('\n')[0])
     print('------- The markers of the image are: ',mrk_nm)
     mdata = get_metadata(filename[idx],np.shape(aligned_images), mrk_nm, resolution)
