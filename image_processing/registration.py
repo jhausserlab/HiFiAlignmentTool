@@ -51,6 +51,7 @@ def get_aligned_tiffiles(source):
 def get_aligned_marker_names(ref):
   #creates a .txt folder that has the marker names in the correct order for the aligned images
   data = pd.read_csv("channel_name.csv")
+  split_char = '|'
   #create a list of the channel names. in the order that they were saved as in CZI
   name_header = data.columns[0]
   chan_name = []
@@ -59,19 +60,19 @@ def get_aligned_marker_names(ref):
     #j is channel
     for j in range(data.shape[1]-1):
       if(str(data[data.columns[j+1]][i]) != 'nan'):
-        chan_name.append(data[data.columns[j+1]][i] +'_'+ data.columns[j+1] +'_'+ data[name_header][i])
+        chan_name.append(data[data.columns[j+1]][i] +split_char+ data.columns[j+1] +split_char+ data[name_header][i])
 
   #Modify the list to put the reference channel as the first channel of each image
-  img = chan_name[0].split('_')[2]
+  img = chan_name[0].split(split_char)[2]
   img_idx = 0
   for i in range(len(chan_name)):
-    if chan_name[i].split('_')[2] == img:
-      if (chan_name[i].split('_')[1] == ref):  
+    if chan_name[i].split(split_char)[2] == img:
+      if (chan_name[i].split(split_char)[1] == ref):  
         chan_name.insert(i-img_idx, chan_name.pop(i))
       img_idx += 1
     else:
       img_idx = 1
-      img = chan_name[i].split('_')[2]
+      img = chan_name[i].split(split_char)[2]
   
   file_name = open("./aligned/marker_names_al.txt","w")
   for i in range(len(chan_name)):
@@ -81,6 +82,7 @@ def get_aligned_marker_names(ref):
 def get_final_marker_names(ref):
   #creates a .txt folder that has the marker names in the correct order for the final image
   file_al = open("./aligned/marker_names_al.txt","r")
+  split_char = '|'
   data = pd.read_csv("channel_name.csv")
   marker_al = file_al.readlines()
   marker_names_final = []
@@ -89,7 +91,7 @@ def get_final_marker_names(ref):
   file_al.close()
 
   for i in range(len(marker_names_final)-data.shape[0]+1):
-    if (marker_names_final[i].split('_')[1] == ref):
+    if (marker_names_final[i].split(split_char)[1] == ref):
       if i != 0:
         print('Removed reference channel', i,'called', marker_names_final[i])
         marker_names_final.pop(i)
