@@ -35,6 +35,8 @@ From the folder where you are launching the code, you will have:
 
 **Please** respect the CSV file structure with: the name of the CSV called channel_name.csv, the filenames as the rows and the channels as the columns.
 The structure given in the mock dataset is the right one. 
+**Please be sure that the order of the channels in the CSV file is the same as in the image** (e.g. in CZI channel1 is GFP, channel2 DAPI and channel3 Cy5 -> so in CSV file you have the first column as GFP, second column as DAPI and third column as Cy5)
+
 **WARNING:** Do not put the special character **|** in any of the names in the CSV files (whether marker names, filenames or channel names). This **will** cause errors in the processing of the images
 
 Here is how your folder should look like where you run the code:
@@ -55,7 +57,7 @@ If you have downloaded the folder from Github, you should have the same structur
 **WARNING:** The code is set for Windows computer, if you are running on a Mac or Linux please go in the script **czi.py**, comment with '#' line 27 and remove the '#' in line 29
 
 
-**WARNING:** If you are running a new set of czi, it is important that the conditions previously mentioned are met (meaning: reassembled folder is empty, aligned folder is empty,  czi folder has only the czis you want to process, channel_name.csv has the correct layout). Else "old" files will be read with the new ones.
+**WARNING 2:** If you are running a new set of czi, it is important that the conditions previously mentioned are met (meaning: reassembled folder is empty, aligned folder is empty,  czi folder has only the czis you want to process, channel_name.csv has the correct layout). Else "old" files will be read with the new ones.
 
 To run main.py you need to run at least the 2 arguments "source" and "destination" (with the example of the structure in the image, which is what you downloaded):
 ```
