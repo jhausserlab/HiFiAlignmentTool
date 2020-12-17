@@ -132,5 +132,6 @@ The small set of image is taken from a region where the reassembling from czi wa
 This is just to help you run and understand how the code works.
 
 
-NB: The image registration is done thanks to pystackreg library. In this code, RIGID_BODY (translation + rotation) is hard coded as it is the most consistent. However you can also add scaling or scaling + shear. If you want to change the registration process you need to access the script registration.py and modify the line: **sr = StackReg(StackReg.RIGID_BODY)** replace RIGID_BODY with: SCALED_ROTATION or AFFINE.
+NB: The image registration is done thanks to pystackreg library. In this code, RIGID_BODY (translation + rotation) is hard coded as it is the most consistent. However you can do simple translation, scaling or scaling + shear. 
+If you want to change the registration process you need to access the script **registration.py** and modify in **line 240**: **sr = StackReg(StackReg.RIGID_BODY)** replace RIGID_BODY with: TRANSLATION, SCALED_ROTATION or AFFINE.
 See https://pystackreg.readthedocs.io/en/latest/ for more information on the registration process.
