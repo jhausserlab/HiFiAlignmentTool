@@ -156,7 +156,7 @@ def run(args):
   else:
     print("----- No image registration -----")
 
-  if args.finalimage:
+  if args.nofinalimage:
     source = './aligned'
     files = get_aligned_tiffiles(source)
     list_files(source,files)

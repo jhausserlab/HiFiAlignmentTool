@@ -23,8 +23,14 @@ def get_reassembled_czi(czi):
     mosaic = czi.read_mosaic(C=channel, scale_factor=1)
     print('info – channel', channel, 'reassembled')
 
+    #If Windows OS, mosaic has 3 dimensions and if it is mac/linux it is 4
+    if (mosaic.ndim == 4):
+      data.append(mosaic[0,0,:,:])
+    else:
+      data.append(mosaic[0,:,:])
+
     #IF WINDOWS, UNCOMMENT THE LINE BELOW AND COMMENT THE OTHER ONE
-    data.append(mosaic[0,:,:])
+    #data.append(mosaic[0,:,:])
     #IF MAC/LINUX, UNCOMMENT THE LINE BELOW AND COMMENT THE OTHER ONE
     #data.append(mosaic[0,0,:,:])
     del mosaic

@@ -95,7 +95,7 @@ def get_final_marker_names(ref):
       if i != 0:
         print('Removed reference channel', i,'called', marker_names_final[i])
         marker_names_final.pop(i)
-  print('Final image size will be:',len(marker_names_final))
+  print('Final image size will have:',len(marker_names_final), 'channels')
 
   file_name = open("marker_names_final.txt","w")
   for i in range(len(marker_names_final)):
@@ -310,7 +310,7 @@ def get_aligned_images(args, source):
     print('------- The markers of the image are: ',mrk_nm)
     mdata = get_metadata(filename[idx],np.shape(aligned_images), mrk_nm, resolution)
 
-    print('Saving aligned image')
+    print('Saving aligned image \n')
     with tifffile.TiffWriter('./aligned/'+filename[idx]+'_al.ome.tif',
                                  bigtiff = True) as tif:
       tif.save(np.array(aligned_images), description  = mdata)
