@@ -44,14 +44,14 @@ parser.add_argument(
   action='store_const',
   const=True,
   default=False,
-  help='disable reassembling of czi file into an image'
+  help='disable reassembling of czi file into an image (useful for devel or if OME TIFFs are provided)'
 )
 parser.add_argument(
   '--disable-registration',
   action='store_const',
   const=True,
   default=False,
-  help='disable image registration'
+  help='disable image registration (useful for devel)'
 )
 parser.add_argument(
   '--downscale',
@@ -64,7 +64,7 @@ parser.add_argument(
   '--factor', 
   type = float,
   default=0.33,
-  help ='Scale factor between 0. - 1. (needs --downscale to work else it is full resolution)'
+  help ='Scale factor between 0. - 1. (only used if --downscale is set)'
 ) 
 parser.add_argument(
   '--finalimage',
