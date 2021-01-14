@@ -51,7 +51,7 @@ parser.add_argument(
   action='store_const',
   const=True,
   default=False,
-  help='disable image registration'
+  help='disable image registration (useful for devel)'
 )
 parser.add_argument(
   '--downscale',
