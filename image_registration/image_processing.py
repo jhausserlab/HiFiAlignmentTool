@@ -3,8 +3,8 @@ import numpy as np
 import os
 import tifffile
 import pathlib
-from image_processing.czi import get_image
-from image_processing.registration import get_tiffiles, get_aligned_images, final_image, get_aligned_tiffiles
+from image_registration.czi import get_image
+from image_registration.registration import get_tiffiles, get_aligned_images, final_image, get_aligned_tiffiles
 from sys import getsizeof
 import gc
 import pandas as pd
@@ -31,7 +31,7 @@ def list_files(source, files):
   print(file_list)
 
 def ask_for_approval():
-  # if argument -y is not pput, before each processing, this is asked to be sure that the user wants to proceed
+  # if argument -y is not put, before each processing, this is asked to be sure that the user wants to proceed
   hasApproval = False
 
   while not hasApproval:

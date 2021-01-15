@@ -1,6 +1,6 @@
 import os
 import argparse
-from image_processing.image_processing import run
+from image_registration.image_processing import run
 
 # calls the run function and enables to put different arguments to process the images.
 def dir_path(string):
