@@ -29,10 +29,6 @@ def get_reassembled_czi(czi):
     else:
       data.append(mosaic[0,:,:])
 
-    #IF WINDOWS, UNCOMMENT THE LINE BELOW AND COMMENT THE OTHER ONE
-    #data.append(mosaic[0,:,:])
-    #IF MAC/LINUX, UNCOMMENT THE LINE BELOW AND COMMENT THE OTHER ONE
-    #data.append(mosaic[0,0,:,:])
     del mosaic
     gc.collect()
 

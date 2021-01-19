@@ -53,10 +53,8 @@ If you have downloaded the folder from Github, you should have the same structur
 - ./aligned/**empty.txt**
 - ./reassembled/**image_shape.txt**
 
-**WARNING:** The code is set for Windows computer, if you are running on a Mac or Linux please go in the script **./image_registration/czi.py**, comment with '#' line 27 and remove the '#' in line 29
 
-
-**WARNING 2:** If you are running a new set of czi, it is important that the conditions previously mentioned are met (meaning: reassembled folder is empty, aligned folder is empty,  czi folder has only the czis you want to process, channel_name.csv has the correct layout). Else "old" files will be read with the new ones.
+**WARNING:** If you are running a new set of czi, it is important that the conditions previously mentioned are met (meaning: reassembled folder is empty, aligned folder is empty,  czi folder has only the czis you want to process, channel_name.csv has the correct layout). Else "old" files will be read with the new ones.
 
 To run main.py you need to run at least the 2 arguments "source" and "destination" (with the example of the structure in the image, which is what you downloaded):
 ```
