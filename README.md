@@ -46,13 +46,11 @@ Here is how your folder should look like where you run the code:
 
 If you have downloaded the folder from Github, you should have the same structure as the image above (with the addition of a couple of files that should be removed).
 
-**Please remove the following files as they are not needed for the code**:
+**You can remove the following files as they are not needed for the code**:
 
 - **README.md**
 - **structure.png**
 - ./aligned/**empty.txt**
-- ./reassembled/**image_shape.txt**
-
 
 **WARNING:** If you are running a new set of czi, it is important that the conditions previously mentioned are met (meaning: reassembled folder is empty, aligned folder is empty,  czi folder has only the czis you want to process, channel_name.csv has the correct layout). Else "old" files will be read with the new ones.
 
