@@ -1,6 +1,6 @@
 import os
 import argparse
-from image_processing.image_processing import run
+from image_registration.image_processing import run
 
 # calls the run function and enables to put different arguments to process the images.
 def dir_path(string):
@@ -67,11 +67,11 @@ parser.add_argument(
   help ='Scale factor between 0. - 1. (only used if --downscale is set)'
 ) 
 parser.add_argument(
-  '--finalimage',
+  '--nofinalimage',
   action='store_const',
-  const=True,
-  default=False,
-  help='Saves all the channels into one image and removes all reference channels except from the first image'
+  const=False,
+  default=True,
+  help='If you do not want to create the final image with all the channels'
 )
 
 args = parser.parse_args()

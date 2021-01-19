@@ -1,4 +1,4 @@
-# Microscopy Image Processing
+# Microscopy Image Registration
 
 Code to register czi microscopy images or OME.TIF with **python 3**.
 This code is optimised at a memory level to be able to reassemble and register (translation + rotation) high resolution images in **ome.tif**. 
@@ -29,7 +29,7 @@ From the folder where you are launching the code, you will have:
 - an EMPTY folder called **reassembled** (where reassembled images and image dimension will be save, it will be the "destination").
 - an EMPTY folder called **aligned** (where registered images will be saved).
 - **channel_name.csv** with the experimental layout of the images (a matrix with files x channels and in the cross section the respective marker).
-- **image_processing** folder with the python scripts.
+- **image_registration** folder with the python scripts.
 - **main.py** the main script to run all the code
 - **installLib.py** the script to install all librairies required for the code
 
@@ -46,18 +46,13 @@ Here is how your folder should look like where you run the code:
 
 If you have downloaded the folder from Github, you should have the same structure as the image above (with the addition of a couple of files that should be removed).
 
-**Please remove the following files as they are not needed for the code**:
+**You can remove the following files as they are not needed for the code**:
 
 - **README.md**
 - **structure.png**
-- ./czi/**empty.txt**
 - ./aligned/**empty.txt**
-- ./reassembled/**image_shape.txt**
 
-**WARNING:** The code is set for Windows computer, if you are running on a Mac or Linux please go in the script **czi.py**, comment with '#' line 27 and remove the '#' in line 29
-
-
-**WARNING 2:** If you are running a new set of czi, it is important that the conditions previously mentioned are met (meaning: reassembled folder is empty, aligned folder is empty,  czi folder has only the czis you want to process, channel_name.csv has the correct layout). Else "old" files will be read with the new ones.
+**WARNING:** If you are running a new set of czi, it is important that the conditions previously mentioned are met (meaning: reassembled folder is empty, aligned folder is empty,  czi folder has only the czis you want to process, channel_name.csv has the correct layout). Else "old" files will be read with the new ones.
 
 To run main.py you need to run at least the 2 arguments "source" and "destination" (with the example of the structure in the image, which is what you downloaded):
 ```
@@ -71,7 +66,7 @@ main.py has also 8 optional arguments:
 5. --disable-registration --> if you want to skip the image registeration
 6. --downscale --> if you want to reduce the resolution of your image (default is 0.33) if your image is too large for processing.
 7. --factor 0.XX --> the downscale factor you want between 0 and 1 ( the argument --downscale is required else it is full resolution that is done)
-8. --finalimage --> if you want to save the final image containing all the channels without the reference channel except for the one used as reference for registration
+8. --nofinalimage --> if you do not want to save the final image (containing all the channels without the reference channel except for the one used as reference for registration)
 
 
 if you want more information on the arguments run
@@ -118,15 +113,15 @@ When downloading the github folder, you have a mock image set with its respectiv
 To ensure the code is running and to also try the different options, you can work with this small image set.
 First of all, run the following code
 ```
-python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 --finalimage
+python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325
 ```
 This will reassemble, register and save the final image and ask you to confirm for every step. Once this works, you can skip the ask for approval part by adding -y like so:
 ```
-python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 --finalimage -y
+python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 -y
 ```
 Finally, if the images are too large for your computer to process and you would like to downscale the image (e.g 50% resolution) you can do the following:
 ```
-python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 --finalimage -y --downscale --factor 0.5
+python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 -y --downscale --factor 0.5
 ```
 The small set of image is taken from a region where the reassembling from czi was poorly done, thus there are shifts in the image. 
 This is just to help you run and understand how the code works.

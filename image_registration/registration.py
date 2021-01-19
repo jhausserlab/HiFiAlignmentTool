@@ -95,7 +95,7 @@ def get_final_marker_names(ref):
       if i != 0:
         print('Removed reference channel', i,'called', marker_names_final[i])
         marker_names_final.pop(i)
-  print('Final image size will be:',len(marker_names_final))
+  print('Final image size will have:',len(marker_names_final), 'channels')
 
   file_name = open("marker_names_final.txt","w")
   for i in range(len(marker_names_final)):
@@ -133,6 +133,7 @@ def pad_image(i_max, j_max, image):
 
 def get_metadata(filename, img_shape, mrk_nm, resolution):
   #name of the file you are running, shape of the image, the name of the markers, the scale of the image (pxl = XX um)
+  #creates the metadata for the image to have it directly integrated with the ome.tif
   mdata = '''<?xml version="1.0" encoding="UTF-8" standalone="no"?><!-- Warning: this comment is an OME-XML metadata block, which contains crucial dimensional parameters and other important metadata. Please edit cautiously (if at all), and back up the original data before doing so. For more information, see the OME-TIFF web site: https://docs.openmicroscopy.org/latest/ome-model/ome-tiff/. --><OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Creator="OME Bio-Formats 6.5.1" UUID="urn:uuid:e152586d-4214-4027-a620-edb3f6cfc6af" xsi:schemaLocation="http://www.openmicroscopy.org/Schemas/OME/2016-06 http://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd">'''
   mdata = mdata + '''<Image ID="Image:0" Name="'''+filename+'''">'''
   mdata = mdata + '''<Pixels ID="Pixels:0" DimensionOrder="XYCZT" PhysicalSizeX="'''+str(resolution)+'''" PhysicalSizeY="'''+str(resolution)+'''" Type="uint16" SizeX="'''+str(img_shape[2])+'''" SizeY="'''+str(img_shape[1])+'''" SizeC="'''+str(img_shape[0])+'''" SizeZ="1" SizeT="1">'''
@@ -310,7 +311,7 @@ def get_aligned_images(args, source):
     print('------- The markers of the image are: ',mrk_nm)
     mdata = get_metadata(filename[idx],np.shape(aligned_images), mrk_nm, resolution)
 
-    print('Saving aligned image')
+    print('Saving aligned image \n')
     with tifffile.TiffWriter('./aligned/'+filename[idx]+'_al.ome.tif',
                                  bigtiff = True) as tif:
       tif.save(np.array(aligned_images), description  = mdata)
