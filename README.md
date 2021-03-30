@@ -64,7 +64,7 @@ main.py has also 8 optional arguments:
 3. --resolution XX --> the resolution of input images in um/pixel which will be added in the metadata(0.325 um by default)
 4. --disable-reassemble --> if you want to skip the reassembling
 5. --disable-registration --> if you want to skip the image registeration
-6. --downscale --> if you want to reduce the resolution of your image (default is 0.33) if your image is too large for processing.
+6. --downscale --> if you want to reduce the resolution of your image (default is 0.33) if your image is too large for processing. CAREFUL: if you put 0.20 for example that means that the image will be 20% of the full resolution thus for a 1000x1000 pixel image you will have a 200x200 pixel output image
 7. --factor 0.XX --> the downscale factor you want between 0 and 1 ( the argument --downscale is required else it is full resolution that is done)
 8. --nofinalimage --> if you do not want to save the final image (containing all the channels without the reference channel except for the one used as reference for registration)
 
