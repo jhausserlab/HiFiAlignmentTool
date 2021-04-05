@@ -435,6 +435,45 @@ def get_aligned_images(args, source):
   all_end_time = datetime.now()
   print('--- Total Registration Duration: {}'.format(all_end_time - all_start_time), '\n')
 
+
+def remove_background(args, source, filename):
+  ref = args.reference
+  bckgrd_tif = tifffile.imread(os.path.join(source, args.backgroundSub+'_al.ome.tif'))
+  tif = tifffile.imread(os.path.join(source,filename))
+
+  #To get the channel structure of bckgrd we start at 1 as element 0 is Filename
+  data_strct = pd.read_csv("channel_name.csv")
+  channels = list(data_strct.columns[1:])
+  channels.remove(ref)
+  channels.insert(0, ref)
+
+  marker_names_al = open(os.path.join(source, 'marker_names_al.txt'),"r")
+  marker_al = marker_names_al.readlines()
+
+  #We never do the first channel (which is the reference channel) so we start at 1
+  tif_pos = 1
+  #Going through the list of markers
+  for mrk in range(len(marker_al)):
+    #Find where our markers start at with their respective filename
+    if marker_al[mrk].split('|')[2].split('\n')[0]+'_al.ome.tif' == filename:
+      #Go through all the channels and find the right idx between bckgrd_tif and tif
+      for chan in range(len(channels)):
+        # if the channel names are the same and they are not DAPI then we do the subtraction
+        if channels[chan] == marker_al[mrk].split('|')[1] and channels[chan] != ref:
+          temp_tif = tif[tif_pos,:,:].astype(np.int64) - bckgrd_tif[chan,:,:].astype(np.int64)
+          #If some background value is larger than in the tif, due to it being uint you would get max values which is wrong
+          temp_tif[temp_tif <= 0] = 0
+          temp_tif = temp_tif.astype(np.uint16)
+          tif[tif_pos,:,:] = temp_tif
+          del temp_tif
+          gc.collect()
+
+          print(np.sum(tif[tif_pos,:,:]))
+          tif_pos += 1
+          break
+  return tif
+
+
 def final_image(args,source):
   # loads one registed image after another and saves them all into one image. The first image keeps the reference channel
   # whereas we remove reference channels for all the others
@@ -443,7 +482,11 @@ def final_image(args,source):
   resolution = args.resolution
   get_final_marker_names(ref)
   files = get_aligned_tiffiles(source)
-  tif = tifffile.imread(os.path.join(source,files[0]))
+  if args.backgroundSub != 'False':
+    print('------ Doing also Background Subtraction ------ ')
+    tif = remove_background(args, source, files[0])
+  else:
+    tif = tifffile.imread(os.path.join(source,files[0]))
 
   if args.downscale:
     resolution = round(resolution/args.factor,3)
@@ -453,13 +496,15 @@ def final_image(args,source):
 
   for idx in range(len(files)-1):
     print('--- Adding:', files[idx+1])
-    tif = tifffile.imread(os.path.join(source,files[idx+1]))
-    print('Tif shape', np.shape(tif))
+    if args.backgroundSub != 'False':
+      tif = remove_background(args, source, files[idx+1])
+    else:
+      tif = tifffile.imread(os.path.join(source,files[idx+1]))
+
     tif = np.delete(tif, 0, 0)
     print('Removed alignment channel', np.shape(tif))
 
     final_image = np.append(final_image, tif, axis = 0)
-    print(np.shape(final_image))
     print('Image size: ', getsizeof(np.array(final_image))/10**6, 'MB')
 
   print('Final image size: ',np.shape(final_image), getsizeof(np.array(final_image))/10**6, 'MB')
