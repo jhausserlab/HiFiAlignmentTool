@@ -58,6 +58,7 @@ def write(args, file, image):
         tif.save(image)
 
       #To not put the background image dimensions (can cause errors rest of code, but can be corrected if it seems crucial)
+      #Need to see if this should be done
       if file != f'{os.path.basename(args.destination)}/{args.backgroundSub}':
         with open(f'{os.path.basename(args.destination)}/{name_txt}' + '.txt', 'a') as f:
           #Save dimension C X Y for processing when we want to register
