@@ -39,6 +39,6 @@ def get_image(source, file):
   print('--- Processing:', source + '/' + file)
   czi = aicspylibczi.CziFile(pathlib.Path(source + '/' + file ))
   reassembled_czi = get_reassembled_czi(czi)
-  print('Shape of reassembled_czi shape: ', np.shape(reassembled_czi), 'of size', getsizeof(np.array(reassembled_czi))/10**6, 'MB')
+  print('Shape of reassembled_czi: ', np.shape(reassembled_czi), 'of size', getsizeof(np.array(reassembled_czi))/10**6, 'MB')
   return reassembled_czi
   

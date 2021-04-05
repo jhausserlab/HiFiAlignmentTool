@@ -7,6 +7,7 @@ import os
 import sys
 import tifffile
 from sys import getsizeof
+from datetime import datetime
 
 import pandas as pd
 
@@ -144,6 +145,7 @@ def get_metadata(filename, img_shape, mrk_nm, resolution):
   return mdata
 
 def get_aligned_images(args, source):
+  all_start_time = datetime.now()
   #function used to do registration on all images with respect to the first image of the file list.
   files = get_tiffiles(source)
   filename = get_filename()
@@ -206,8 +208,116 @@ def get_aligned_images(args, source):
   del chan_ref
   gc.collect()
 
+  # If background subtraction is asked:
+  if args.backgroundSub != 'False':
+    print('--- Aligning tif:', args.backgroundSub)
+    tif_mov = tifffile.imread(os.path.join(source,args.backgroundSub+'.ome.tif'))
+    print('Shape of image is: ', np.shape(tif_mov), 'size', getsizeof(tif_mov)/10**6, 'MB')
+    print('------- Reference Channel idx in the image:', max(idx_values[ref]) + 1)
+    # The reference marker channel position of background is the same as the round that has the 
+    # the most channels in of all the rounds
+    chan_mov = np.array(tif_mov[max(idx_values[ref])])
+    del tif_mov
+    gc.collect()
+    if(np.shape(chan_mov)[0] == i_max and np.shape(chan_mov)[1] == j_max):
+      pad_chan_mov = chan_mov
+    else:
+      print('Padding image size to', i_max, j_max)
+      pad_chan_mov = pad_image(i_max, j_max, chan_mov)
+    del chan_mov
+    gc.collect()
+    if args.downscale:
+      pad_chan_mov = rescale(pad_chan_mov, rescale_fct, anti_aliasing=anti_alias, preserve_range = True)
+      print('Down scaled the image to', np.shape(pad_chan_mov), getsizeof(np.array(pad_chan_mov))/10**6, 'MB')
+
+    #Doing the registration between both channels
+    print('Getting Transform matrix')
+    #ATTENTION: If you want to do other types of registration from pystackreg, here is where you do it!!!!!
+    # you have the following options: TRANSLATION, RIGID_BODY, SCALED_ROTATION, AFFINE, BILINEAR
+    # if you want more information, please check the following link 
+    # https://pystackreg.readthedocs.io/en/latest/
+    ##### BE SURE TO CHANGE ALSO FOR THE OTHERS JUST BELOW, if you are doing another transformation #####
+    sr = StackReg(StackReg.RIGID_BODY)
+    sr.register(pad_chan_ref, pad_chan_mov)
+    print('Registration matrix acquired and now transforming the channels') 
+
+    del pad_chan_mov
+    gc.collect()
+
+    #Reload tif_mov to align all the images with the transformation that we got from registration
+    tif_mov = tifffile.imread(os.path.join(source,args.backgroundSub+'.ome.tif'))
+    
+    aligned_images = []
+    channels = np.shape(tif_mov)[0]
+    for channel in range(channels):
+      #To put reference channel as first channel in the image and to see if we need padding
+      if channel == 0:
+        if(np.shape(tif_mov)[1] == i_max and np.shape(tif_mov)[2] == j_max):
+          pad_tif_mov = tif_mov[max(idx_values[ref]),:,:]
+        else:
+          pad_tif_mov = pad_image(i_max, j_max, tif_mov[max(idx_values[ref]),:,:])
+      else:
+        if(np.shape(tif_mov)[1] == i_max and np.shape(tif_mov)[2] == j_max):
+          pad_tif_mov = tif_mov[0,:,:]
+        else:
+          pad_tif_mov = pad_image(i_max, j_max, tif_mov[0,:,:])
+
+      #To free memory as we do not need these channels
+      #if it was the first iteration, we want reference channel as our first registered channel
+      #thus we have reference channel removed, after it is the normal order (remove first channel)
+      if channel == 0:
+        if np.shape(tif_mov)[0] > 1: 
+          tif_mov = np.delete(tif_mov, max(idx_values[ref]), axis = 0)
+      else:
+        if np.shape(tif_mov)[0] > 1: 
+          tif_mov = np.delete(tif_mov, 0, axis = 0)
+      
+      #To downscale the channel if asked
+      if args.downscale:
+        pad_tif_mov = rescale(pad_tif_mov, rescale_fct, anti_aliasing=anti_alias, preserve_range = True)
+      
+      #Doing the image registration
+      aligned_tif = sr.transform(pad_tif_mov)
+      del pad_tif_mov
+      gc.collect()
+
+      #Due to the registration, some values become negative at the edges (with the transformation matrix)
+      #If I do not correct this, i get white bands as these negative values get converted to maximum values in uint16.
+      #I do equal to 0 as it is at the edge and can be considered as background
+      aligned_tif[aligned_tif <= 0] = 0
+      #when converting to uint, it troncatenates the values (eg 1000.7 -> 1000)
+      aligned_tif = aligned_tif.astype(np.uint16)
+
+      aligned_images.append(aligned_tif)
+      print('info -- channel', channel,'aligned')
+      del aligned_tif
+      gc.collect()
+
+    print('Transformed channels done, image is of size', np.shape(aligned_images), 
+                                  getsizeof(np.array(aligned_images))/10**6, 'MB')
+    del tif_mov
+    gc.collect()
+
+    #To put the marker names in the metadata and also the scale/resolution
+    mrk_nm = list(data_strct.columns[1:])
+    #Need to move reference name to first position
+    mrk_nm.remove(ref)
+    mrk_nm.insert(0, ref)
+    print('------- The markers of the image are: ',mrk_nm)
+    mdata = get_metadata(args.backgroundSub,np.shape(aligned_images), mrk_nm, resolution)
+
+    print('Saving aligned image \n')
+    with tifffile.TiffWriter('./aligned/'+args.backgroundSub+'_al.ome.tif',
+                                 bigtiff = True) as tif:
+      tif.save(np.array(aligned_images), description  = mdata) #
+
+    del aligned_images
+    gc.collect()
+
+
   # We have our reference channel, now we go get our channel to align
   for idx in range(len(filename)):
+    start_time = datetime.now()
     print('--- Aligning tif:', files[idx])
     tif_mov = tifffile.imread(os.path.join(source,files[idx]))
     print('Shape of image is: ', np.shape(tif_mov), 'size', getsizeof(tif_mov)/10**6, 'MB')
@@ -247,7 +357,7 @@ def get_aligned_images(args, source):
     gc.collect()
 
     #Reload tif_mov to align all the images with the transformation that we got from registration
-    tif_mov = tifffile.imread(source +'/'+ files[idx])
+    tif_mov = tifffile.imread(os.path.join(source,files[idx]))
     
     aligned_images = []
     channels = np.shape(tif_mov)[0]
@@ -311,15 +421,19 @@ def get_aligned_images(args, source):
     print('------- The markers of the image are: ',mrk_nm)
     mdata = get_metadata(filename[idx],np.shape(aligned_images), mrk_nm, resolution)
 
-    print('Saving aligned image \n')
+    print('Saving aligned image')
     with tifffile.TiffWriter('./aligned/'+filename[idx]+'_al.ome.tif',
                                  bigtiff = True) as tif:
       tif.save(np.array(aligned_images), description  = mdata)
 
     del aligned_images
     gc.collect()
+    end_time = datetime.now()
+    print('------------- Registration Duration of',filename[idx],': {}'.format(end_time - start_time),'\n')
 
   print('DONE! All images are registered')
+  all_end_time = datetime.now()
+  print('--- Total Registration Duration: {}'.format(all_end_time - all_start_time), '\n')
 
 def final_image(args,source):
   # loads one registed image after another and saves them all into one image. The first image keeps the reference channel

@@ -73,6 +73,12 @@ parser.add_argument(
   default=True,
   help='If you do not want to create the final image with all the channels'
 )
+parser.add_argument(
+  '--backgroundSub',
+  type = str,
+  default= 'False',
+  help='Filename to do background subtraction on your images'
+)
 
 args = parser.parse_args()
 

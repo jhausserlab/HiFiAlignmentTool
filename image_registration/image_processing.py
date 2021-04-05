@@ -8,6 +8,7 @@ from image_registration.registration import get_tiffiles, get_aligned_images, fi
 from sys import getsizeof
 import gc
 import pandas as pd
+from datetime import datetime
 
 def get_czifiles(source):
   #Fetches the czi filenames in the source folder
@@ -56,9 +57,11 @@ def write(args, file, image):
       with tifffile.TiffWriter(file  + '.ome.tif', bigtiff = True) as tif:
         tif.save(image)
 
-      with open(f'{os.path.basename(args.destination)}/{name_txt}' + '.txt', 'a') as f:
-        #Save dimension C X Y for processing when we want to register
-        f.write(str(np.shape(image)[0])+','+str(np.shape(image)[1])+','+str(np.shape(image)[2])+';')
+      #To not put the background image dimensions (can cause errors rest of code, but can be corrected if it seems crucial)
+      if file != f'{os.path.basename(args.destination)}/{args.backgroundSub}':
+        with open(f'{os.path.basename(args.destination)}/{name_txt}' + '.txt', 'a') as f:
+          #Save dimension C X Y for processing when we want to register
+          f.write(str(np.shape(image)[0])+','+str(np.shape(image)[1])+','+str(np.shape(image)[2])+';')
     else:
       print('destination path does not exist')
 
@@ -117,8 +120,10 @@ def get_img_dim(source):
   file_name.close()
 
 def run(args):
+  all_start_time = datetime.now()
   #runs the different steps of the code: - stiching - registration - save all in one image
   if not args.disable_reassemble:
+    start_time = datetime.now()
     source = args.source
     files = get_czifiles(source)
     list_files(source, files)
@@ -138,6 +143,15 @@ def run(args):
       print('DONE!')
       del image
       gc.collect()
+
+    if args.backgroundSub != 'False':
+      file = args.backgroundSub+'.czi'
+      image = get_image(source, file)
+      print('Saving image and image dimension')
+      write(args, file, image)
+    
+    end_time = datetime.now()
+    print('\n--- Reassembling Duration: {}'.format(end_time - start_time), '\n')
   else:
     print("------- No Reassembling done -------")
 
@@ -154,7 +168,7 @@ def run(args):
     channel_check(args, source)
     get_aligned_images(args, source)
   else:
-    print("----- No image registration -----")
+    print("------- No image registration -------")
 
   if args.nofinalimage:
     source = './aligned'
@@ -164,6 +178,12 @@ def run(args):
     if not args.yes:
       ask_for_approval()
 
+    start_time = datetime.now()
     final_image(args, source)
+    end_time = datetime.now()
+    print('--------- Final_image Duration: {}'.format(end_time - start_time), '\n')
   else:
-    print("-------- No final image ---------")
+    print("------- No final image --------")
+
+  all_end_time = datetime.now()
+  print('--- Total Duration: {}'.format(all_end_time - all_start_time), '\n')
