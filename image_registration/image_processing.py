@@ -57,12 +57,9 @@ def write(args, file, image):
       with tifffile.TiffWriter(file  + '.ome.tif', bigtiff = True) as tif:
         tif.save(image)
 
-      #To not put the background image dimensions (can cause errors rest of code, but can be corrected if it seems crucial)
-      #Need to see if this should be done
-      if file != f'{os.path.basename(args.destination)}/{args.background}':
-        with open(f'{os.path.basename(args.destination)}/{name_txt}' + '.txt', 'a') as f:
-          #Save dimension C X Y for processing when we want to register
-          f.write(str(np.shape(image)[0])+','+str(np.shape(image)[1])+','+str(np.shape(image)[2])+';')
+      with open(f'{os.path.basename(args.destination)}/{name_txt}' + '.txt', 'a') as f:
+        #Save dimension C X Y for processing when we want to register
+        f.write(str(np.shape(image)[0])+','+str(np.shape(image)[1])+','+str(np.shape(image)[2])+';')
     else:
       print('destination path does not exist')
 
@@ -96,8 +93,14 @@ def channel_check(args, source):
   file = open(os.path.join(source,'image_shape.txt'),'r')
   images_shape = file.read()
   split = images_shape.split(';')
-  #-1 as last element is always an empty str
-  for i in range(len(split)-1):
+
+  if args.background != 'False':
+    #-2 as last element is always an empty str and second to last is the background subtraction 
+    removeLast = 2
+  else:
+    #-1 as last element is always an empty str (and no background subtraction element)
+    removeLast = 1
+  for i in range(len(split)-removeLast):
     chan = split[i].split(',')
     if(int(chan[0]) != idx_values.iloc[:,-1][i]+1):
       print('The number of channels in CSV file doesn’t match the number of channels in image', idx_values.iloc[:,0][i],'.')
@@ -108,7 +111,7 @@ def channel_check(args, source):
       exit()
   print('------- CSV file matches images and all images have the reference channel -------')
 
-def get_img_dim(source):
+def get_img_dim(args, source):
   #If reassembling is not done, the images in source will be loaded and the dimension is saved in a txt file.
   #This file is needed for further processing
   print('----- Extracting image dimensions and putting them in image_shape.txt -----')
@@ -119,6 +122,13 @@ def get_img_dim(source):
     file_name.write(str(np.shape(tif)[0])+','+str(np.shape(tif)[1])+','+str(np.shape(tif)[2])+';')
     del tif
     gc.collect()
+
+  if args.background != 'False':
+    tif = tifffile.imread(os.path.join(source,args.background+'.ome.tif'))
+    file_name.write(str(np.shape(tif)[0])+','+str(np.shape(tif)[1])+','+str(np.shape(tif)[2])+';')
+    del tif
+    gc.collect()
+
   file_name.close()
 
 def run(args):
@@ -166,7 +176,7 @@ def run(args):
       ask_for_approval()
 
     if args.disable_reassemble:
-      get_img_dim(source)
+      get_img_dim(args, source)
     channel_check(args, source)
     get_aligned_images(args, source)
   else:
