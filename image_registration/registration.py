@@ -114,6 +114,7 @@ def get_max_shape(source):
   i_max = 0
   j_max = 0
   print(split)
+  #-1 as last element is always an empty string
   for i in range(len(split)-1):
      frag = split[i].split(',')
      i_max = max(i_max,int(frag[1]))
@@ -209,9 +210,9 @@ def get_aligned_images(args, source):
   gc.collect()
 
   # If background subtraction is asked:
-  if args.backgroundSub != 'False':
-    print('--- Aligning tif:', args.backgroundSub)
-    tif_mov = tifffile.imread(os.path.join(source,args.backgroundSub+'.ome.tif'))
+  if args.background != 'False':
+    print('--- Aligning tif:', args.background)
+    tif_mov = tifffile.imread(os.path.join(source,args.background+'.ome.tif'))
     print('Shape of image is: ', np.shape(tif_mov), 'size', getsizeof(tif_mov)/10**6, 'MB')
     print('------- Reference Channel idx in the image:', max(idx_values[ref]) + 1)
     # The reference marker channel position of background is the same as the round that has the 
@@ -245,7 +246,7 @@ def get_aligned_images(args, source):
     gc.collect()
 
     #Reload tif_mov to align all the images with the transformation that we got from registration
-    tif_mov = tifffile.imread(os.path.join(source,args.backgroundSub+'.ome.tif'))
+    tif_mov = tifffile.imread(os.path.join(source,args.background+'.ome.tif'))
     
     aligned_images = []
     channels = np.shape(tif_mov)[0]
@@ -304,10 +305,10 @@ def get_aligned_images(args, source):
     mrk_nm.remove(ref)
     mrk_nm.insert(0, ref)
     print('------- The markers of the image are: ',mrk_nm)
-    mdata = get_metadata(args.backgroundSub,np.shape(aligned_images), mrk_nm, resolution)
+    mdata = get_metadata(args.background,np.shape(aligned_images), mrk_nm, resolution)
 
     print('Saving aligned image \n')
-    with tifffile.TiffWriter('./aligned/'+args.backgroundSub+'_al.ome.tif',
+    with tifffile.TiffWriter('./aligned/'+args.background+'_al.ome.tif',
                                  bigtiff = True) as tif:
       tif.save(np.array(aligned_images), description  = mdata) #
 
@@ -438,7 +439,7 @@ def get_aligned_images(args, source):
 
 def remove_background(args, source, filename):
   ref = args.reference
-  bckgrd_tif = tifffile.imread(os.path.join(source, args.backgroundSub+'_al.ome.tif'))
+  bckgrd_tif = tifffile.imread(os.path.join(source, args.background+'_al.ome.tif'))
   tif = tifffile.imread(os.path.join(source,filename))
 
   #To get the channel structure of bckgrd we start at 1 as element 0 is Filename
@@ -460,7 +461,7 @@ def remove_background(args, source, filename):
       for chan in range(len(channels)):
         # if the channel names are the same and they are not DAPI then we do the subtraction
         if channels[chan] == marker_al[mrk].split('|')[1] and channels[chan] != ref:
-          temp_tif = tif[tif_pos,:,:].astype(np.int64) - bckgrd_tif[chan,:,:].astype(np.int64)
+          temp_tif = tif[tif_pos,:,:].astype(np.int64) - bckgrd_tif[chan,:,:].astype(np.int64)*args.backgroundMult
           #If some background value is larger than in the tif, due to it being uint you would get max values which is wrong
           temp_tif[temp_tif <= 0] = 0
           temp_tif = temp_tif.astype(np.uint16)
@@ -468,7 +469,6 @@ def remove_background(args, source, filename):
           del temp_tif
           gc.collect()
 
-          print(np.sum(tif[tif_pos,:,:]))
           tif_pos += 1
           break
   return tif
@@ -482,8 +482,8 @@ def final_image(args,source):
   resolution = args.resolution
   get_final_marker_names(ref)
   files = get_aligned_tiffiles(source)
-  if args.backgroundSub != 'False':
-    print('------ Doing also Background Subtraction ------ ')
+  if args.background != 'False':
+    print('------ Doing also Background Subtraction, using multiplier of',args.backgroundMult,' ------ ')
     tif = remove_background(args, source, files[0])
   else:
     tif = tifffile.imread(os.path.join(source,files[0]))
@@ -496,7 +496,7 @@ def final_image(args,source):
 
   for idx in range(len(files)-1):
     print('--- Adding:', files[idx+1])
-    if args.backgroundSub != 'False':
+    if args.background != 'False':
       tif = remove_background(args, source, files[idx+1])
     else:
       tif = tifffile.imread(os.path.join(source,files[idx+1]))

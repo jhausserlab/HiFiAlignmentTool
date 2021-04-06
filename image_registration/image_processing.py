@@ -59,7 +59,7 @@ def write(args, file, image):
 
       #To not put the background image dimensions (can cause errors rest of code, but can be corrected if it seems crucial)
       #Need to see if this should be done
-      if file != f'{os.path.basename(args.destination)}/{args.backgroundSub}':
+      if file != f'{os.path.basename(args.destination)}/{args.background}':
         with open(f'{os.path.basename(args.destination)}/{name_txt}' + '.txt', 'a') as f:
           #Save dimension C X Y for processing when we want to register
           f.write(str(np.shape(image)[0])+','+str(np.shape(image)[1])+','+str(np.shape(image)[2])+';')
@@ -96,6 +96,7 @@ def channel_check(args, source):
   file = open(os.path.join(source,'image_shape.txt'),'r')
   images_shape = file.read()
   split = images_shape.split(';')
+  #-1 as last element is always an empty str
   for i in range(len(split)-1):
     chan = split[i].split(',')
     if(int(chan[0]) != idx_values.iloc[:,-1][i]+1):
@@ -145,8 +146,8 @@ def run(args):
       del image
       gc.collect()
 
-    if args.backgroundSub != 'False':
-      file = args.backgroundSub+'.czi'
+    if args.background != 'False':
+      file = args.background+'.czi'
       image = get_image(source, file)
       print('Saving image and image dimension')
       write(args, file, image)
