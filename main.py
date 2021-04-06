@@ -85,6 +85,13 @@ parser.add_argument(
   default= 1,
   help='To multiply the background intensity of all channel that is subtracted for each respective channels '
 )
+parser.add_argument(
+  '--fullname',
+  action='store_const',
+  const=True,
+  default=False,
+  help='If you use this argument, in the metadata of your final image, you will have the full name marker|channel|filename. Else it is just marker'
+)
 
 args = parser.parse_args()
 

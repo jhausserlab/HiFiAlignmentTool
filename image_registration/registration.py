@@ -80,7 +80,7 @@ def get_aligned_marker_names(ref):
     file_name.write(chan_name[i]+'\n')
   file_name.close()
 
-def get_final_marker_names(ref):
+def get_final_marker_names(args, ref):
   #creates a .txt folder that has the marker names in the correct order for the final image
   file_al = open("./aligned/marker_names_al.txt","r")
   split_char = '|'
@@ -98,11 +98,18 @@ def get_final_marker_names(ref):
         marker_names_final.pop(i)
   print('Final image size will have:',len(marker_names_final), 'channels')
 
+  if not args.fullname:
+    print('-------------- Marker names only in the final image metadata')
+    for i in range(len(marker_names_final)):
+      marker_names_final[i] = marker_names_final[i].split(split_char)[0]+'\n'
+      
+  else:
+    print('-------------- Full marker names in the final image metadata')
+
   file_name = open("marker_names_final.txt","w")
   for i in range(len(marker_names_final)):
     file_name.write(marker_names_final[i])
   file_name.close()
-  print('-------------- marker_names_final.txt saved')
 
 def get_max_shape(source):
   #this function gets the maximum dimensions from all the images that are going to be registered
@@ -480,7 +487,7 @@ def final_image(args,source):
   print('-------------- Final image --------------')
   ref = args.reference
   resolution = args.resolution
-  get_final_marker_names(ref)
+  get_final_marker_names(args, ref)
   files = get_aligned_tiffiles(source)
   if args.background != 'False':
     print('------ Doing also Background Subtraction, using multiplier of',args.backgroundMult,' ------ ')
