@@ -8,6 +8,7 @@ from image_registration.registration import get_tiffiles, get_aligned_images, fi
 from sys import getsizeof
 import gc
 import pandas as pd
+from datetime import datetime
 
 def get_czifiles(source):
   #Fetches the czi filenames in the source folder
@@ -92,7 +93,14 @@ def channel_check(args, source):
   file = open(os.path.join(source,'image_shape.txt'),'r')
   images_shape = file.read()
   split = images_shape.split(';')
-  for i in range(len(split)-1):
+
+  if args.background != 'False':
+    #-2 as last element is always an empty str and second to last is the background subtraction 
+    removeLast = 2
+  else:
+    #-1 as last element is always an empty str (and no background subtraction element)
+    removeLast = 1
+  for i in range(len(split)-removeLast):
     chan = split[i].split(',')
     if(int(chan[0]) != idx_values.iloc[:,-1][i]+1):
       print('The number of channels in CSV file doesn’t match the number of channels in image', idx_values.iloc[:,0][i],'.')
@@ -103,7 +111,7 @@ def channel_check(args, source):
       exit()
   print('------- CSV file matches images and all images have the reference channel -------')
 
-def get_img_dim(source):
+def get_img_dim(args, source):
   #If reassembling is not done, the images in source will be loaded and the dimension is saved in a txt file.
   #This file is needed for further processing
   print('----- Extracting image dimensions and putting them in image_shape.txt -----')
@@ -114,11 +122,20 @@ def get_img_dim(source):
     file_name.write(str(np.shape(tif)[0])+','+str(np.shape(tif)[1])+','+str(np.shape(tif)[2])+';')
     del tif
     gc.collect()
+
+  if args.background != 'False':
+    tif = tifffile.imread(os.path.join(source,args.background+'.ome.tif'))
+    file_name.write(str(np.shape(tif)[0])+','+str(np.shape(tif)[1])+','+str(np.shape(tif)[2])+';')
+    del tif
+    gc.collect()
+
   file_name.close()
 
 def run(args):
+  all_start_time = datetime.now()
   #runs the different steps of the code: - stiching - registration - save all in one image
   if not args.disable_reassemble:
+    start_time = datetime.now()
     source = args.source
     files = get_czifiles(source)
     list_files(source, files)
@@ -138,6 +155,15 @@ def run(args):
       print('DONE!')
       del image
       gc.collect()
+
+    if args.background != 'False':
+      file = args.background+'.czi'
+      image = get_image(source, file)
+      print('Saving image and image dimension')
+      write(args, file, image)
+    
+    end_time = datetime.now()
+    print('\n--- Reassembling Duration: {}'.format(end_time - start_time), '\n')
   else:
     print("------- No Reassembling done -------")
 
@@ -150,11 +176,11 @@ def run(args):
       ask_for_approval()
 
     if args.disable_reassemble:
-      get_img_dim(source)
+      get_img_dim(args, source)
     channel_check(args, source)
     get_aligned_images(args, source)
   else:
-    print("----- No image registration -----")
+    print("------- No image registration -------")
 
   if args.nofinalimage:
     source = './aligned'
@@ -164,6 +190,12 @@ def run(args):
     if not args.yes:
       ask_for_approval()
 
+    start_time = datetime.now()
     final_image(args, source)
+    end_time = datetime.now()
+    print('--------- Final_image Duration: {}'.format(end_time - start_time), '\n')
   else:
-    print("-------- No final image ---------")
+    print("------- No final image --------")
+
+  all_end_time = datetime.now()
+  print('--- Total Duration: {}'.format(all_end_time - all_start_time), '\n')

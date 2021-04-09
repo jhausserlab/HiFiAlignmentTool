@@ -73,6 +73,25 @@ parser.add_argument(
   default=True,
   help='If you do not want to create the final image with all the channels'
 )
+parser.add_argument(
+  '--background',
+  type = str,
+  default= 'False',
+  help='Filename to do background subtraction on your images'
+)
+parser.add_argument(
+  '--backgroundMult',
+  type = float,
+  default= 1,
+  help='To multiply the background intensity of all channel that is subtracted for each respective channels '
+)
+parser.add_argument(
+  '--fullname',
+  action='store_const',
+  const=True,
+  default=False,
+  help='If you use this argument, in the metadata of your final image, you will have the full name marker|channel|filename. Else it is just marker'
+)
 
 args = parser.parse_args()
 
