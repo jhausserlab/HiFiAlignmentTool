@@ -208,6 +208,7 @@ def get_aligned_images(args, source):
     resolution = round(resolution/rescale_fct,3)
     print('-------------- 1 pixel represents',resolution,'um --------------')
     pad_chan_ref = rescale(pad_chan_ref, rescale_fct, anti_aliasing=anti_alias, preserve_range = True)
+    pad_chan_ref = pad_chan_ref.astype(np.uint16)
     print('chan_ref rescaled', getsizeof(np.array(pad_chan_ref))/10**6, 'MB')
   else:
     print('--------------- Keeping full resolution ----------------')
@@ -236,6 +237,7 @@ def get_aligned_images(args, source):
     gc.collect()
     if args.downscale:
       pad_chan_mov = rescale(pad_chan_mov, rescale_fct, anti_aliasing=anti_alias, preserve_range = True)
+      pad_chan_mov = pad_chan_mov.astype(np.uint16)
       print('Down scaled the image to', np.shape(pad_chan_mov), getsizeof(np.array(pad_chan_mov))/10**6, 'MB')
 
     #Doing the registration between both channels
@@ -283,6 +285,7 @@ def get_aligned_images(args, source):
       #To downscale the channel if asked
       if args.downscale:
         pad_tif_mov = rescale(pad_tif_mov, rescale_fct, anti_aliasing=anti_alias, preserve_range = True)
+        pad_tif_mov = pad_tif_mov.astype(np.uint16)
       
       #Doing the image registration
       aligned_tif = sr.transform(pad_tif_mov)
@@ -348,6 +351,7 @@ def get_aligned_images(args, source):
     #Downscaling image if asked
     if args.downscale:
       pad_chan_mov = rescale(pad_chan_mov, rescale_fct, anti_aliasing=anti_alias, preserve_range = True)
+      pad_chan_mov = pad_chan_mov.astype(np.uint16)
       print('Down scaled the image to', np.shape(pad_chan_mov), getsizeof(np.array(pad_chan_mov))/10**6, 'MB')
 
     #Doing the registration between both channels
@@ -396,6 +400,7 @@ def get_aligned_images(args, source):
       #To downscale the channel if asked
       if args.downscale:
         pad_tif_mov = rescale(pad_tif_mov, rescale_fct, anti_aliasing=anti_alias, preserve_range = True)
+        pad_tif_mov = pad_tif_mov.astype(np.uint16)
       
       #Doing the image registration
       aligned_tif = sr.transform(pad_tif_mov)
