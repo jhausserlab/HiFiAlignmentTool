@@ -4,10 +4,10 @@ Code to register czi microscopy images or OME.TIF with **python 3**.
 This code is optimised at a memory level to be able to reassemble and register (translation + rotation) high resolution images in **ome.tif**. 
 
 Currently, for images of dimension 16'000 x 21'000 pixels the computer uses a maximum of 52GB to run all the code.
-I recommend these dimensions (give or take ~1000 pixels) if you are using a 64GB RAM computer. 
-The images do not need to have the same dimension X,Y as the code will pad all images with the maximum X,Y dimensions of the image set. If you have created a set of images with empty channels for background subtraction, the code can do the backgorund subtraction for you.
+I recommend these dimensions (give or take ~1000 pixels) if you are using a 64GB RAM computer. If you are working with bigger images, you will likely need to have a computer with a more RAM.
+The images do not need to have the same dimension X,Y as the code will pad all images with the maximum X,Y dimensions of the image set. If you have created a set of images with empty channels for background subtraction, the code can do the background subtraction for you.
 
-**Keywords**: Image Registration, Image alignment, CZI, OME.TIF, High Resolution Imagery, Python
+**Keywords**: Image Registration, Image alignment, CZI, OME.TIF, High Resolution Imagery, Python, HIFI
 
 ## Getting started
 
@@ -15,10 +15,16 @@ Download the folder from Github.
 
 From the **terminal**, access that folder using **cd** to arrive to that folder path, as it will be used as the working directory.
 
-To install the required librairies for the code, you can run in the terminal from that folder:
+If you have root access, to install the required librairies for the code, you can run in the terminal from that folder:
 
 ```
 python3 installLib.py
+```
+
+else if you do not have root access (e.g from a server or multi-account computer), you can run:
+
+```
+python3 installLibUser.py
 ```
 
 This installs all the librairies that you require for the process (via pip, which is built-in by default with python3). 
@@ -30,21 +36,22 @@ From the folder where you are launching the code, you will have:
 - an EMPTY folder called **aligned** (where registered images will be saved).
 - **channel_name.csv** with the experimental layout of the images (a matrix with files x channels and in the cross section the respective marker).
 - **image_registration** folder with the python scripts.
-- **main.py** the main script to run all the code
-- **installLib.py** the script to install all librairies required for the code
+- **main.py** the main script to run all the code.
+- **installLib.py** the script to install all librairies required for the code if you have root access.
+- **installLibUser.py** the script to install all librairies required for the code if you are working on a server or you do not have root access.
 
 **Please** respect the CSV file structure with: the name of the CSV called channel_name.csv, the filenames as the rows and the channels as the columns.
 The structure given in the mock dataset is the correct one. 
-**Please be sure that the order of the channels in the CSV file is the same as in the image** (e.g. in CZI channel1 is GFP, channel2 DAPI and channel3 Cy5 -> so in CSV file you have the first column as GFP, second column as DAPI and third column as Cy5). In the case you have a czi file for the background subtraction, it should **not** be included in the CSV file.
+**Please be sure that the order of the channels in the CSV file is the same as in the image** (e.g. in CZI channel1 is Cy3, channel2 Cy5 and channel3 Cy7 -> so in CSV file you have the first column as Cy3, second column as Cy5 and third column as Cy7). In the case you have a czi file for the background subtraction, it should **not** be included in the CSV file.
 
-**WARNING:** Do not put the special character **|** in any of the names in the CSV files (whether marker names, filenames or channel names). This **will** cause errors in the processing of the images
+**WARNING:** Do not put the special character **|** in any of the names in the CSV files (whether marker names, filenames or channel names). This **will** cause errors in the processing of the images if you want the fullname in the metadata.
 
 Here is how your folder should look like where you run the code:
 <p align="center">
   <img src="structure.png"  width="500" height="300">
 </p>
 
-If you have downloaded the folder from Github, you should have the same structure as the image above (with the addition of a couple of files that should be removed).
+If you have downloaded the folder from Github, you should have the same structure as the image above (with the addition of a couple of files that can be removed).
 
 **You can remove the following files as they are not needed for the code**:
 
@@ -57,7 +64,7 @@ To run main.py you need to run at least the 2 arguments "source" and "destinatio
 python3 main.py ./czi ./reassembled
 ```
 main.py has also optional arguments:
-1. -y, --yes --> runs the code without asking questions before reassembling and before registration.
+1. -y, --yes --> runs the code without asking questions before reassembling, registration and final_image creation.
 2. --reference CHAN --> in the place of CHAN put the channel you want to align with (DAPI by default).
 3. --resolution XX --> in the place of XX the resolution of input images in um/pixel which will be added in the metadata (0.325 um by default).
 4. --disable-reassemble --> if you want to skip the reassembling.
@@ -65,7 +72,7 @@ main.py has also optional arguments:
 6. --downscale --> if you want to reduce the resolution of your image (default is 0.33) if your image is too large for processing.
 7. --factor 0.XX --> the downscale factor you want between 0 and 1 ( the argument --downscale is required else it is full resolution that is done). CAREFUL: if you put 0.20 for example that means that the image will be 20% of the full resolution thus for a 1000x1000 pixel image you will have a 200x200 pixel output image.
 8. --nofinalimage --> if you do not want to save the final image (containing all the channels without the reference channel except for the one used as reference for registration).
-9. --background filename --> if you have a czi file that contains the channels with no markers (to do background subtraction). You can put it in the czi folder and the code will remove the background in the final image output. (if no argument provided, it will not do any background subtraction).
+9. --background filename --> if you have a czi file that contains the channels with no markers except for the reference channel used for registration. You can put it in the czi folder and the code will remove the background for each respective channel (except for reference channel) in the final image output. If no argument provided, it will not do any background subtraction.
 10. --backgroundMult XX --> if you want to remove the background multiplied by a certain factor XX (1 by default).
 11. --fullname --> if you want the full name of the channels (e.g marker | channel | filename). By default it gives just the marker name.
 
@@ -99,7 +106,7 @@ python3 main.py --help
 9. Save the registered images in ome.tif into the folder aligned. They are saved with metadata for the channel names and scale of the image (changes the scale accordingly if downsized)
 10. Restart from step 4. with the next image
 11. Save a txt file with the marker names in the right order with the new images based on the CSV file (MARKER_CHANNEL_FILE)
-12. This is also done with the background czi file if the argument is provided
+12. Image registration is also done with the background czi file if the argument is provided
 
 **FINAL IMAGE**
 1. Loads the first image into an array
@@ -129,10 +136,14 @@ python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 -y --dow
 ```
 Finally, if you provided a background czi file (in our case the background is a copy of test1.czi) you can add the following arguments to add background subtraction on your final image:
 ```
-python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 -y --background background --backgroundMult 1
+python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 -y --background background
 ```
 The resulting image will give you 4 channels that are empty as we are subtracting the channels of test1 with itself.
 
+If you want to increase the background subtraction and you have already done the reassembling and registration, you can skip those steps and just construct the new final image with the following code:
+```
+python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 -y --background background --backgroundMult 2 --disable-reassemble --disable-registration
+```
 
 The small set of image is taken from a region where the reassembling from czi was poorly done, thus there are slight shifts in the image. 
 This is just to help you run the code and understand how the code works.
