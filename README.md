@@ -152,7 +152,7 @@ This is just to help you run the code and understand how the code works.
 
 **Does your code work on all systems?**
 
-Yes, this code has runs on Mac, Windows and Linux systems. 
+Yes, this code runs on Mac, Windows and Linux systems. 
 
 **The code crashes during the step in the terminal:**
 ```
@@ -175,6 +175,8 @@ You likely have an older version of the library aicspylibczi (latest version is 
 Yes, this image can be used in Qupath. However, if you are working with a very large image, you will need to open the image in ZEN and save it as a CZI. This will put it in a format that will make it easier for Qupath to open and work with.
 
 
-NB: The image registration is done thanks to pystackreg library. In this code, RIGID_BODY (translation + rotation) is hard coded as it is the most consistent. However you can do simple translation, scaling or scaling + shear. 
+**Can I do another type of image registration?**
+
+The image registration is done thanks to pystackreg library. In this code, RIGID_BODY (translation + rotation) is hard coded as it is the most consistent. However you can do simple translation, scaling or scaling + shear. 
 If you want to change the registration process you need to access the script **registration.py** and modify in **line 250** and **line 363**: **sr = StackReg(StackReg.RIGID_BODY)** replace RIGID_BODY with: TRANSLATION, SCALED_ROTATION or AFFINE.
 See https://pystackreg.readthedocs.io/en/latest/ for more information on the registration process.
