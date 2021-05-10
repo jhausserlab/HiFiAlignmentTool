@@ -4,7 +4,7 @@ Code to register czi microscopy images or OME.TIF with **python 3**.
 This code is optimised at a memory level to be able to reassemble and register (translation + rotation) high resolution images in **ome.tif**. 
 
 Currently, for images of dimension 16'000 x 21'000 pixels the computer uses a maximum of 52GB to run all the code.
-I recommend these dimensions (give or take ~1000 pixels) if you are using a 64GB RAM computer. If you are working with bigger images, you will likely need to have a computer with a more RAM.
+I recommend these dimensions (give or take ~1000 pixels) if you are using a 64GB RAM computer. If you are working with bigger images, you will likely need to have a computer with more RAM.
 The images do not need to have the same dimension X,Y as the code will pad all images with the maximum X,Y dimensions of the image set. If you have created a set of images with empty channels for background subtraction, the code can do the background subtraction for you.
 
 **Keywords**: Image Registration, Image alignment, CZI, OME.TIF, High Resolution Imagery, Python, HIFI
@@ -38,7 +38,7 @@ From the folder where you are launching the code, you will have:
 - **image_registration** folder with the python scripts.
 - **main.py** the main script to run all the code.
 - **installLib.py** the script to install all librairies required for the code if you have root access.
-- **installLibUser.py** the script to install all librairies required for the code if you are working on a server or you do not have root access.
+- **installLibUser.py** the script to install all librairies required for the code if you do not have root access.
 
 **Please** respect the CSV file structure with: the name of the CSV called channel_name.csv, the filenames as the rows and the channels as the columns.
 The structure given in the mock dataset is the correct one. 
@@ -148,7 +148,33 @@ python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 -y --bac
 The small set of image is taken from a region where the reassembling from czi was poorly done, thus there are slight shifts in the image. 
 This is just to help you run the code and understand how the code works.
 
+## F.A.Q:
+
+**Does your code work on all systems?**
+
+Yes, this code has runs on Mac, Windows and Linux systems. 
+
+**The code crashes during the step in the terminal:**
+```
+Getting Transform matrix
+```
+**What does this mean?**
+
+This means that your computer does not have enough RAM for the image sizes you want to register. You can: crop the image to reduce the size, use the --downscale argument in the code to reduce the resolution of your image, use a computer with more RAM.
+
+**I am getting an error:**
+```
+'CziFile' object has no attribute 'dims_shape'
+```
+**What does this mean?**
+
+You likely have an older version of the library aicspylibczi (latest version is 3.0.1). Previous version used the function dims_shape(). You have to uninstall and reinstall the library or you can also change in the script czi.py in line12 the function from get_dims_shape to dims_shape (I recommend using the first solution).
+
+**Can I use Qupath to analyse further the final image?**
+
+Yes, this image can be used in Qupath. However, if you are working with a very large image, you will need to open the image in ZEN and save it as a CZI. This will put it in a format that will make it easier for Qupath to open and work with.
+
 
 NB: The image registration is done thanks to pystackreg library. In this code, RIGID_BODY (translation + rotation) is hard coded as it is the most consistent. However you can do simple translation, scaling or scaling + shear. 
-If you want to change the registration process you need to access the script **registration.py** and modify in **line 248** and **line 349**: **sr = StackReg(StackReg.RIGID_BODY)** replace RIGID_BODY with: TRANSLATION, SCALED_ROTATION or AFFINE.
+If you want to change the registration process you need to access the script **registration.py** and modify in **line 250** and **line 363**: **sr = StackReg(StackReg.RIGID_BODY)** replace RIGID_BODY with: TRANSLATION, SCALED_ROTATION or AFFINE.
 See https://pystackreg.readthedocs.io/en/latest/ for more information on the registration process.
