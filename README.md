@@ -178,7 +178,7 @@ You likely have an older version of the library aicspylibczi (latest version is 
 
 **I am getting an error:**
 ```
-'Tifffile' object has no attribute 'save'
+'TiffWriter' object has no attribute 'write'
 ```
 **What does this mean?**
 
