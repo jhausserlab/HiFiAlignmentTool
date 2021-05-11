@@ -75,6 +75,7 @@ main.py has also optional arguments:
 9. --background filename --> if you have a czi file that contains the channels with no markers except for the reference channel used for registration. You can put it in the czi folder and the code will remove the background for each respective channel (except for reference channel) in the final image output. If no argument provided, it will not do any background subtraction.
 10. --backgroundMult XX --> if you want to remove the background multiplied by a certain factor XX (1 by default).
 11. --fullname --> if you want the full name of the channels (e.g marker | channel | filename). By default it gives just the marker name.
+12. --pyramidal --> if you want to save a new final image that is compressed and pyramidal. 
 
 
 if you want to know what are the arguments via the terminal, type:
@@ -134,7 +135,7 @@ If the images are too large for your computer to process and you would like to d
 ```
 python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 -y --downscale --factor 0.8
 ```
-Finally, if you provided a background czi file (in our case the background is a copy of test1.czi) you can add the following arguments to add background subtraction on your final image:
+If you provided a background czi file (in our case the background is a copy of test1.czi) you can add the following arguments to add background subtraction on your final image:
 ```
 python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 -y --background background
 ```
@@ -145,6 +146,10 @@ If you want to increase the background subtraction and you have already done the
 python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 -y --background background --backgroundMult 2 --disable-reassemble --disable-registration
 ```
 
+Finally, if you want to have a compressed, tiled, pyramidal OME-TIF you can add the argument --pyramidal. This can also be done after having done the whole process by disabling the previous steps and only doing the pyramidal step :
+```
+python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 -y --disable-reassemble --disable-registration --pyramidal
+```
 
 N.B: The small set of image is taken from a region where the reassembling from czi was poorly done, thus there are slight shifts in the image. 
 This is just to help you run the code and understand how the code works.
@@ -152,6 +157,7 @@ This is just to help you run the code and understand how the code works.
 ## F.A.Q:
 
 **Does your code work on all systems?**
+
 Yes, this code runs on Mac, Windows and Linux systems. 
 
 **The code crashes during the step in the terminal:**
@@ -159,6 +165,7 @@ Yes, this code runs on Mac, Windows and Linux systems.
 Getting Transform matrix
 ```
 **What does this mean?**
+
 This means that your computer does not have enough RAM for the image sizes you want to register. You can: crop the image to reduce the size, use the --downscale argument in the code to reduce the resolution of your image, use a computer with more RAM.
 
 **I am getting an error:**
@@ -166,13 +173,24 @@ This means that your computer does not have enough RAM for the image sizes you w
 'CziFile' object has no attribute 'dims_shape'
 ```
 **What does this mean?**
+
 You likely have an older version of the library aicspylibczi (latest version is 3.0.1). Previous version used the function dims_shape(). You have to uninstall and reinstall the library or you can also change in the script czi.py in line12 the function from get_dims_shape to dims_shape (I recommend using the first solution).
 
+**I am getting an error:**
+```
+'Tifffile' object has no attribute 'save'
+```
+**What does this mean?**
+
+You have an older version of the library tifffile (latest version is 2021.4.8). Previous version used the function tif.save to save tiffs but it has been deprecated and now tif.write is the function to use. Be sure to install the latest version of tifffile. Or else you can replace the parts of the code where there is tif.write by tif.save. WARNING: Do not do this for the function pyramidal_final_image as it is only in the latest version that you can do a pyramidal compressed tiff. 
+
 **Can I use Qupath to analyse further the final image?**
+
 Yes, this image can be used in Qupath. However, if you are working with a very large image, you will need to open the image in ZEN and save it as a CZI. This will put it in a format that will make it easier for Qupath to open and work with.
 
 
 **Can I do another type of image registration?**
+
 The image registration is done thanks to pystackreg library. In this code, RIGID_BODY (translation + rotation) is hard coded as it is the most consistent. However you can do simple translation, scaling or scaling + shear. 
 If you want to change the registration process you need to access the script **registration.py** and modify in **line 250** and **line 363**: **sr = StackReg(StackReg.RIGID_BODY)** replace RIGID_BODY with: TRANSLATION, SCALED_ROTATION or AFFINE.
 See https://pystackreg.readthedocs.io/en/latest/ for more information on the registration process.
@@ -184,5 +202,6 @@ Could not find a version that satisfies the requirement aicspylibczi (from versi
 No matching distribution found for aicspylibczi
 ```
 **How can I solve this?**
+
 This is due to a version problem of your linux system or python. The easiest way to solve this is to have a minconda environment. For more details about this problem, please look at this ticket that I opened for the same issue:
 https://github.com/AllenCellModeling/aicspylibczi/issues/82

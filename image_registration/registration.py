@@ -320,7 +320,7 @@ def get_aligned_images(args, source):
     print('Saving aligned image \n')
     with tifffile.TiffWriter('./aligned/'+args.background+'_al.ome.tif',
                                  bigtiff = True) as tif:
-      tif.save(np.array(aligned_images), description  = mdata) #
+      tif.write(np.array(aligned_images), description  = mdata) #
 
     del aligned_images
     gc.collect()
@@ -437,7 +437,7 @@ def get_aligned_images(args, source):
     print('Saving aligned image')
     with tifffile.TiffWriter('./aligned/'+filename[idx]+'_al.ome.tif',
                                  bigtiff = True) as tif:
-      tif.save(np.array(aligned_images), description  = mdata)
+      tif.write(np.array(aligned_images), description  = mdata)
 
     del aligned_images
     gc.collect()
@@ -526,6 +526,71 @@ def final_image(args,source):
   mdata = get_metadata('final_image', np.shape(final_image), marker_final, resolution)
 
   with tifffile.TiffWriter('./final_image.ome.tif', bigtiff = True) as tif:
-    tif.save(np.array(final_image), description  = mdata)
+    tif.write(np.array(final_image), description  = mdata)
 
   print('Final image saved!')
+
+
+def pyramidal_final_image(args):
+  # loads one registed image after another and saves them all into one image. The first image keeps the reference channel
+  # whereas we remove reference channels for all the others
+  print('-------------- Pyramidal Compressed Final image --------------')
+  ref = args.reference
+  resolution = args.resolution
+  #get_final_marker_names(args, ref)
+
+  if args.downscale:
+    resolution = round(resolution/args.factor,3)
+
+
+  data = tifffile.imread('final_image.ome.tif')
+  print ('Initial image dimension',data.shape)
+
+  marker_names_final = open('./marker_names_final.txt',"r")
+  marker_final = marker_names_final.readlines()
+  mdata = get_metadata('final_image', np.shape(data), marker_final, resolution)
+
+  scale = 0.5
+  dataShape = rescale(data[0,:,:], scale, anti_aliasing=True, preserve_range = True)
+  data1 = np.ones((data.shape[0],dataShape.shape[0],dataShape.shape[1]))
+  del dataShape
+  data1 = data1.astype(np.uint16)
+  for i in range(data.shape[0]):
+    data1[i,:,:] = rescale(data[i,:,:], scale, anti_aliasing=True, preserve_range = True)
+  print('Level 1 image dimension', data1.shape)
+
+  scale = 0.25
+  dataShape = rescale(data[0,:,:], scale, anti_aliasing=True, preserve_range = True)
+  data2 = np.ones((data.shape[0],dataShape.shape[0],dataShape.shape[1]))
+  del dataShape
+  data2 = data2.astype(np.uint16)
+  for i in range(data.shape[0]):
+    data2[i,:,:] = rescale(data[i,:,:], scale, anti_aliasing=True, preserve_range = True)
+  print('Level 2 image dimension', data2.shape)
+
+  scale = 0.125
+  dataShape = rescale(data[0,:,:], scale, anti_aliasing=True, preserve_range = True)
+  data3 = np.ones((data.shape[0],dataShape.shape[0],dataShape.shape[1]))
+  del dataShape
+  data3 = data3.astype(np.uint16)
+  for i in range(data.shape[0]):
+    data3[i,:,:] = rescale(data[i,:,:], scale, anti_aliasing=True, preserve_range = True)
+  print('Level 3 image dimension', data3.shape)
+
+  #if you want to make it work for the small test set of images, 
+  #you need to change tileSize to 32 as the image is just above 500 pixels
+  tileSize = 32
+  comp = 'zlib' #zstd, lzma does not work
+
+  #Write a tiled, multi-resolution, pyramidal, OME-TIFF file using zlib compression. 
+  #Sub-resolution images are written to SubIFDs:
+  with tifffile.TiffWriter('pyr_final_image.ome.tif', bigtiff=True) as tif:
+    options = dict(tile=(tileSize, tileSize), description  = mdata, compression = comp)
+    tif.write(data, subifds=3, **options)
+
+    tif.write(data1, subfiletype=0, **options)
+    tif.write(data2, subfiletype=0, **options)
+    tif.write(data3, subfiletype=0, **options)
+  print('DONE, compressed pyramidal image saved!')
+
+

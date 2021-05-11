@@ -92,6 +92,13 @@ parser.add_argument(
   default=False,
   help='If you use this argument, in the metadata of your final image, you will have the full name marker|channel|filename. Else it is just marker'
 )
+parser.add_argument(
+  '--pyramidal',
+  action='store_const',
+  const=True,
+  default=False,
+  help='If you use this argument, the code will save an additional final_image that is a tiled, multi-resolution OME-TIFF file'
+)
 
 args = parser.parse_args()
 
