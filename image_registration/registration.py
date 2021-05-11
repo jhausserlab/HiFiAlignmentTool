@@ -579,7 +579,7 @@ def pyramidal_final_image(args):
 
   #if you want to make it work for the small test set of images, 
   #you need to change tileSize to 32 as the image is just above 500 pixels
-  tileSize = 32
+  tileSize = 512
   comp = 'zlib' #zstd, lzma does not work
 
   #Write a tiled, multi-resolution, pyramidal, OME-TIFF file using zlib compression. 
