@@ -198,6 +198,20 @@ Yes, this image can be used in Qupath. However, if you are working with a very l
 
 If you want to try the pyramidal function with the test set you need to go into the script registration.py and modify line 582 **tileSize = 512** to **tileSize = 32**. This is because the test image is too small for 512 pixels tilesize.
 
+**Can I have more details on the pyramidal argument?**
+
+What it does is:
+- loads the final_image.ome.tif 
+- creates 4 levels of resolution (100% 50% 25% 12.5%)
+- tiles it with size 512 pixels 
+- compresses the file by using the lossless zlib compression 
+- save it as pyr_final_image.ome.tif.
+For my use case, I used a tumor image: 13'500 x 14'000 x 49 channels of original size 18.7 GB.
+This file I cannot load directly into QuPath so it is a good use case to see if it works.
+The created compressed tiled pyramidal image was 15 GB compared to 27GB in size if I had done uncompressed tiled pyramidal. 
+This process is quite lengthy though, it took 28 minutes to do the whole step for the original 18.7 GB image so if you are working with larger images, do not be surprised.
+The RAM used during this whole process was around 27GB and as the registration process required more RAM than that, I would say that: if you can do the registration, you can also create the compressed file with the same computer/server. 
+
 **Can I do another type of image registration?**
 
 The image registration is done thanks to pystackreg library. In this code, RIGID_BODY (translation + rotation) is hard coded as it is the most consistent. However you can do simple translation, scaling or scaling + shear. 
