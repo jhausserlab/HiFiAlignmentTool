@@ -206,6 +206,7 @@ What it does is:
 - tiles it with size 512 pixels 
 - compresses the file by using the lossless zlib compression 
 - save it as pyr_final_image.ome.tif.
+
 For my use case, I used a tumor image: 13'500 x 14'000 x 49 channels of original size 18.7 GB.
 This file I cannot load directly into QuPath so it is a good use case to see if it works.
 The created compressed tiled pyramidal image was 15 GB compared to 27GB in size if I had done uncompressed tiled pyramidal. 
