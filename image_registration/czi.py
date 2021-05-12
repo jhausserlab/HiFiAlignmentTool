@@ -9,7 +9,7 @@ from sys import getsizeof
 def get_reassembled_czi(czi):
   #Reassembles the czi images. It returns a np.array of uint16.
   data = []
-  dims_shape = czi.dims_shape()
+  dims_shape = czi.get_dims_shape()
 
   if not 'C' in dims_shape[0]:
     raise Exception("Image lacks Channels")

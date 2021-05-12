@@ -4,7 +4,7 @@ import os
 import tifffile
 import pathlib
 from image_registration.czi import get_image
-from image_registration.registration import get_tiffiles, get_aligned_images, final_image, get_aligned_tiffiles
+from image_registration.registration import get_tiffiles, get_aligned_images, get_aligned_tiffiles, final_image, pyramidal_final_image
 from sys import getsizeof
 import gc
 import pandas as pd
@@ -196,6 +196,14 @@ def run(args):
     print('--------- Final_image Duration: {}'.format(end_time - start_time), '\n')
   else:
     print("------- No final image --------")
+
+  if args.pyramidal:
+    start_time = datetime.now()
+    pyramidal_final_image(args)
+    end_time = datetime.now()
+    print('--------- Pyramidal_final_image Duration: {}'.format(end_time - start_time), '\n')
+  else:
+    print("------- No compressed tiled pyramidal final image --------")
 
   all_end_time = datetime.now()
   print('--- Total Duration: {}'.format(all_end_time - all_start_time), '\n')
