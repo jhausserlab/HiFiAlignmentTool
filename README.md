@@ -208,10 +208,10 @@ What it does is:
 - save it as pyr_final_image.ome.tif.
 
 For my use case, I used a tumor image: 13'500 x 14'000 x 49 channels of original size 18.7 GB.
-This file I cannot load directly into QuPath so it is a good use case to see if it works.
-The created compressed tiled pyramidal image was 15 GB compared to 27GB in size if I had done uncompressed tiled pyramidal. 
-This process is quite lengthy though, it took 28 minutes to do the whole step for the original 18.7 GB image so if you are working with larger images, do not be surprised.
-The RAM used during this whole process was around 27GB and as the registration process required more RAM than that, I would say that: if you can do the registration, you can also create the compressed file with the same computer/server. 
+This file I cannot load directly into QuPath so it is a good use case to see if --pyramidal works.
+The created compressed tiled pyramidal image was 15 GB compared to 27GB if I had done uncompressed tiled pyramidal. 
+This process is quite lengthy though on a 64 GB computer. It took 28 minutes to do the whole step for the original 18.7 GB image so if you are working with larger images, do not be surprised.
+The RAM used during this whole process was around 27GB and as the registration process required more RAM than that, I would say: if you can do the registration, you can also create the compressed file with the same computer/server. 
 
 **Can I do another type of image registration?**
 
