@@ -116,6 +116,7 @@ python3 main.py --help
 4. Repeat step 2-3 until the end
 5. Final image is saved in ome.tif in the main folder where you run the code. It is saved with metadata for the channel names and scale of the image
 6. Save a txt file with the marker names in the right order for the final image based on the CSV file (MARKER_CHANNEL_FILE)
+7. If  --pyramidal was called, the code will load fina_image.ome.tif and create a new compressed tiled pyramidal image.
 
 It is important to note that the loading of the file paths are done in the order given in the CSV file. The CSV file must be correct for proper running of the code!
 
@@ -135,7 +136,7 @@ If the images are too large for your computer to process and you would like to d
 ```
 python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 -y --downscale --factor 0.8
 ```
-If you provided a background czi file (in our case the background is a copy of test1.czi) you can add the following arguments to add background subtraction on your final image:
+If you provided a background czi file (in our case the background is a copy of test1.czi) you can add the following argument to add background subtraction on your final image:
 ```
 python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 -y --background background
 ```
@@ -146,10 +147,15 @@ If you want to increase the background subtraction and you have already done the
 python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 -y --background background --backgroundMult 2 --disable-reassemble --disable-registration
 ```
 
-Finally, if you want to have a compressed, tiled, pyramidal OME-TIF you can add the argument --pyramidal. This can also be done after having done the whole process by disabling the previous steps and only doing the pyramidal step :
+Finally, if you want to have a compressed tiled pyramidal OME-TIF you can add the argument --pyramidal. 
 ```
-python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 -y --disable-reassemble --disable-registration --pyramidal
+python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 -y --pyramidal
 ```
+This can also be done after having done the whole process by disabling the previous steps and only doing the pyramidal step (you need to have the final image created as it creates the compressed pyramidal image in function of the final_image).
+```
+python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 -y --disable-reassemble --disable-registration --nofinalimage --pyramidal
+```
+WARNING: If you want to try the pyramidal function with the test set you need to go into the script registration.py and modify line 582 tileSize = 512 to tileSize = 32. This is because the test image is too small for 512 pixels tilesize.
 
 N.B: The small set of image is taken from a region where the reassembling from czi was poorly done, thus there are slight shifts in the image. 
 This is just to help you run the code and understand how the code works.
@@ -186,8 +192,11 @@ You have an older version of the library tifffile (latest version is 2021.4.8). 
 
 **Can I use Qupath to analyse further the final image?**
 
-Yes, this image can be used in Qupath. However, if you are working with a very large image, you will need to open the image in ZEN and save it as a CZI. This will put it in a format that will make it easier for Qupath to open and work with.
+Yes, this image can be used in Qupath. However, if you are working with a very large image, you will need a tiled pyramidal image for QuPath to open. This can be done using the argument --pyramidal to save the image in that format. Or you can also open the final_image.ome.tif in ZEN and save that image in CZI format. QuPath can handle both.
 
+**I am trying to do pyramidal from the test set and I am getting an error**
+
+If you want to try the pyramidal function with the test set you need to go into the script registration.py and modify line 582 **tileSize = 512** to **tileSize = 32**. This is because the test image is too small for 512 pixels tilesize.
 
 **Can I do another type of image registration?**
 
@@ -196,6 +205,7 @@ If you want to change the registration process you need to access the script **r
 See https://pystackreg.readthedocs.io/en/latest/ for more information on the registration process.
 
 **When running installLib.py or installLibUser.py, I am getting the following error**
+
 ```
 Collecting aicspylibczi
 Could not find a version that satisfies the requirement aicspylibczi (from versions: )
@@ -203,5 +213,5 @@ No matching distribution found for aicspylibczi
 ```
 **How can I solve this?**
 
-This is due to a version problem of your linux system or python. The easiest way to solve this is to have a minconda environment. For more details about this problem, please look at this ticket that I opened for the same issue:
+This is due to a version problem of your linux system or python. The easiest way to solve this is to have a miniconda environment or you can manually install it. For more details about this problem, please look at this ticket that I opened for the same issue:
 https://github.com/AllenCellModeling/aicspylibczi/issues/82

@@ -194,15 +194,16 @@ def run(args):
     final_image(args, source)
     end_time = datetime.now()
     print('--------- Final_image Duration: {}'.format(end_time - start_time), '\n')
+  else:
+    print("------- No final image --------")
 
   if args.pyramidal:
     start_time = datetime.now()
     pyramidal_final_image(args)
     end_time = datetime.now()
     print('--------- Pyramidal_final_image Duration: {}'.format(end_time - start_time), '\n')
-
   else:
-    print("------- No final image --------")
+    print("------- No compressed tiled pyramidal final image --------")
 
   all_end_time = datetime.now()
   print('--- Total Duration: {}'.format(all_end_time - all_start_time), '\n')
