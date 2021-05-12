@@ -1,7 +1,7 @@
 # Microscopy Image Registration
 
 Code to register czi microscopy images or OME.TIF with **python 3**.
-This code is optimised at a memory level to be able to reassemble and register (translation + rotation) high resolution images in **ome.tif**. 
+This code is optimised at a memory level to be able to reassemble and register (translation + rotation) high resolution images in **ome.tif**. This code can also save the final image in a compressed tiled pyramidal OME-TIF format.
 
 Currently, for images of dimension 16'000 x 21'000 pixels the computer uses a maximum of 52GB to run all the code.
 I recommend these dimensions (give or take ~1000 pixels) if you are using a 64GB RAM computer. If you are working with bigger images, you will likely need to have a computer with more RAM.
