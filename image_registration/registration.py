@@ -535,8 +535,14 @@ def final_image(args,source):
     with pyczi.create_czi('./final_image.czi', exist_ok=True) as czi:
       channels, height, width = final_image_np.shape
       for ch in range(channels):
-        array2d = final_image_np[ch, ...][..., np.newaxis]
-        czi.write(data=array2d)#, plane={"Z", ch})
+        array2d = final_image_np[ch, ...][..., np.newaxis]  # height x width x 1
+        czi.write(data=array2d, plane={"C": ch})
+      channel_names = {i: name.strip() for i, name in enumerate(marker_final)}
+      czi.write_metadata(document_name='final_image',
+                         channel_names=channel_names,
+                         scale_x=resolution * 10**-6,
+                         scale_y=resolution * 10**-6,
+                         scale_z=resolution * 10**-6)
 
   print('Final image saved!')
 
