@@ -17,18 +17,24 @@ From the **terminal**, access that folder using **cd** to arrive to that folder 
 
 If you have root access, to install the required librairies for the code, you can run in the terminal from that folder:
 
-```
+```bash
 python3 -m pip install -r requirements.txt
 ```
 
 else if you do not have root access (e.g from a server or multi-account computer), you can run:
 
-```
+```bash
 python3 -m pip install --user -r requirements.txt
 ```
 
-This installs all the librairies that you require for the process (via pip, which is built-in by default with python3).
-After having done so, you can remove this script if desired.
+This installs all the libraries that you require for the process (via pip, which is built-in by default with python3).
+
+**Important**: If you need to output CZI files insted of OME-TIFF, you will also need to install the `pylibCZIrw` library.
+This library is not (yet) on [the Python package index (PyPI)](https://pypi.org/) and you will therefore have to install it manually as follows:
+
+```bash
+python3 -m pip install pylibCZIrw-*.whl
+```
 
 From the folder where you are launching the code, you will have:
 - a folder **czi**, where the czi files that you want to process will be stored (which will be the "source").
