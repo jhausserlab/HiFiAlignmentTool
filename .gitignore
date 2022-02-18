@@ -1,3 +1,7 @@
+# Ignore script outputs
+*.ome.tif
+*.txt
+
 # Below: Python .gitigore
 # Source: <https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore>
 
