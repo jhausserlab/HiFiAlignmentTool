@@ -1,5 +1,6 @@
 # Ignore script outputs
 *.ome.tif
+*.czi
 *.txt
 
 # Below: Python .gitigore
