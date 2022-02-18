@@ -1,0 +1,7 @@
+# Install using: python3 -m pip install [--user] -r requirements.txt
+numpy
+tifffile
+aicspylibczi
+scikit-image
+pystackreg
+pandas
