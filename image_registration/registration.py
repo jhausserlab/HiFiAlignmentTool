@@ -68,13 +68,13 @@ def get_aligned_marker_names(ref):
   img_idx = 0
   for i in range(len(chan_name)):
     if chan_name[i].split(split_char)[2] == img:
-      if (chan_name[i].split(split_char)[1] == ref):  
+      if (chan_name[i].split(split_char)[1] == ref):
         chan_name.insert(i-img_idx, chan_name.pop(i))
       img_idx += 1
     else:
       img_idx = 1
       img = chan_name[i].split(split_char)[2]
-  
+
   file_name = open("./aligned/marker_names_al.txt","w")
   for i in range(len(chan_name)):
     file_name.write(chan_name[i]+'\n')
@@ -102,7 +102,7 @@ def get_final_marker_names(args, ref):
     print('-------------- Marker names only in the final image metadata')
     for i in range(len(marker_names_final)):
       marker_names_final[i] = marker_names_final[i].split(split_char)[0]+'\n'
-      
+
   else:
     print('-------------- Full marker names in the final image metadata')
 
@@ -127,7 +127,7 @@ def get_max_shape(source):
      i_max = max(i_max,int(frag[1]))
      j_max = max(j_max,int(frag[2]))
   print('(i_max, j_max) --------------- ',i_max,j_max)
-        
+
   return i_max,j_max
 
 def pad_image(i_max, j_max, image):
@@ -164,10 +164,10 @@ def get_aligned_images(args, source):
   #Read the csv file with the data structure
   data_strct = pd.read_csv("channel_name.csv")
   name_header = data_strct.columns[0]
-  # The following bit of code is to know which idx is the reference channel. 
-  # I create a new dataframe idx_values that return the idx of the reference channel with respect to the image 
+  # The following bit of code is to know which idx is the reference channel.
+  # I create a new dataframe idx_values that return the idx of the reference channel with respect to the image
   # that is being treated
-  # this takes into account the empty cells if a channel is not used for a given image. 
+  # this takes into account the empty cells if a channel is not used for a given image.
   # (reference channel should always be used)
   idx_values = data_strct.copy()
   for i in range(data_strct.shape[0]):
@@ -186,11 +186,11 @@ def get_aligned_images(args, source):
   print('Loaded tif_ref', getsizeof(tif_ref)/10**6, 'MB')
   chan_ref = np.array(tif_ref[idx_values[ref][idx_values[name_header] == filename[0]].values[0]])
   print('Extracted chan_ref', getsizeof(chan_ref)/10**6, 'MB')
-    
+
   #Do not need tif_ref only chan_ref from it (free memory)
   del tif_ref
   gc.collect()
-  
+
   i_max, j_max = get_max_shape(source)
 
   # To see if padding is required
@@ -199,7 +199,7 @@ def get_aligned_images(args, source):
   else:
     print('---------------- Images will be padded -----------------')
     pad_chan_ref = pad_image(i_max, j_max, chan_ref)
-  
+
   #If you asked for downscaling the image
   if args.downscale:
     anti_alias = True
@@ -223,7 +223,7 @@ def get_aligned_images(args, source):
     tif_mov = tifffile.imread(os.path.join(source,args.background+'.ome.tif'))
     print('Shape of image is: ', np.shape(tif_mov), 'size', getsizeof(tif_mov)/10**6, 'MB')
     print('------- Reference Channel idx in the image:', max(idx_values[ref]) + 1)
-    # The reference marker channel position of background is the same as the round that has the 
+    # The reference marker channel position of background is the same as the round that has the
     # the most channels in of all the rounds
     chan_mov = np.array(tif_mov[max(idx_values[ref])])
     del tif_mov
@@ -244,19 +244,19 @@ def get_aligned_images(args, source):
     print('Getting Transform matrix')
     #ATTENTION: If you want to do other types of registration from pystackreg, here is where you do it!!!!!
     # you have the following options: TRANSLATION, RIGID_BODY, SCALED_ROTATION, AFFINE, BILINEAR
-    # if you want more information, please check the following link 
+    # if you want more information, please check the following link
     # https://pystackreg.readthedocs.io/en/latest/
     ##### BE SURE TO CHANGE ALSO FOR THE OTHERS JUST BELOW, if you are doing another transformation #####
     sr = StackReg(StackReg.RIGID_BODY)
     sr.register(pad_chan_ref, pad_chan_mov)
-    print('Registration matrix acquired and now transforming the channels') 
+    print('Registration matrix acquired and now transforming the channels')
 
     del pad_chan_mov
     gc.collect()
 
     #Reload tif_mov to align all the images with the transformation that we got from registration
     tif_mov = tifffile.imread(os.path.join(source,args.background+'.ome.tif'))
-    
+
     aligned_images = []
     channels = np.shape(tif_mov)[0]
     for channel in range(channels):
@@ -276,17 +276,17 @@ def get_aligned_images(args, source):
       #if it was the first iteration, we want reference channel as our first registered channel
       #thus we have reference channel removed, after it is the normal order (remove first channel)
       if channel == 0:
-        if np.shape(tif_mov)[0] > 1: 
+        if np.shape(tif_mov)[0] > 1:
           tif_mov = np.delete(tif_mov, max(idx_values[ref]), axis = 0)
       else:
-        if np.shape(tif_mov)[0] > 1: 
+        if np.shape(tif_mov)[0] > 1:
           tif_mov = np.delete(tif_mov, 0, axis = 0)
-      
+
       #To downscale the channel if asked
       if args.downscale:
         pad_tif_mov = rescale(pad_tif_mov, rescale_fct, anti_aliasing=anti_alias, preserve_range = True)
         pad_tif_mov = pad_tif_mov.astype(np.uint16)
-      
+
       #Doing the image registration
       aligned_tif = sr.transform(pad_tif_mov)
       del pad_tif_mov
@@ -304,7 +304,7 @@ def get_aligned_images(args, source):
       del aligned_tif
       gc.collect()
 
-    print('Transformed channels done, image is of size', np.shape(aligned_images), 
+    print('Transformed channels done, image is of size', np.shape(aligned_images),
                                   getsizeof(np.array(aligned_images))/10**6, 'MB')
     del tif_mov
     gc.collect()
@@ -334,7 +334,7 @@ def get_aligned_images(args, source):
     print('Shape of image is: ', np.shape(tif_mov), 'size', getsizeof(tif_mov)/10**6, 'MB')
     print('------- Reference Channel idx in the image:',idx_values[ref][idx_values[name_header] == filename[idx]].values[0] + 1)
     chan_mov = np.array(tif_mov[idx_values[ref][idx_values[name_header] == filename[idx]].values[0]])
-    
+
     #delete tif_mov as it is not needed for registration (only need chan_ref) this is done to free memory.
     del tif_mov
     gc.collect()
@@ -358,11 +358,11 @@ def get_aligned_images(args, source):
     print('Getting Transform matrix')
     #ATTENTION: If you want to do other types of registration from pystackreg, here is where you do it!!!!!
     # you have the following options: TRANSLATION, RIGID_BODY, SCALED_ROTATION, AFFINE, BILINEAR
-    # if you want more information, please check the following link 
+    # if you want more information, please check the following link
     # https://pystackreg.readthedocs.io/en/latest/
     sr = StackReg(StackReg.RIGID_BODY)
     sr.register(pad_chan_ref, pad_chan_mov)
-    print('Registration matrix acquired and now transforming the channels') 
+    print('Registration matrix acquired and now transforming the channels')
     # if you want to see the transformation matrix : sr.get_matrix()
 
     del pad_chan_mov
@@ -370,7 +370,7 @@ def get_aligned_images(args, source):
 
     #Reload tif_mov to align all the images with the transformation that we got from registration
     tif_mov = tifffile.imread(os.path.join(source,files[idx]))
-    
+
     aligned_images = []
     channels = np.shape(tif_mov)[0]
     for channel in range(channels):
@@ -391,17 +391,17 @@ def get_aligned_images(args, source):
       #if it was the first iteration, we want reference channel as our first registered channel
       #thus we have reference channel removed, after it is the normal order (remove first channel)
       if channel == 0:
-        if np.shape(tif_mov)[0] > 1: 
+        if np.shape(tif_mov)[0] > 1:
           tif_mov = np.delete(tif_mov, idx_values[ref][idx_values[name_header] == filename[idx]].values[0], axis = 0)
       else:
-        if np.shape(tif_mov)[0] > 1: 
+        if np.shape(tif_mov)[0] > 1:
           tif_mov = np.delete(tif_mov, 0, axis = 0)
-      
+
       #To downscale the channel if asked
       if args.downscale:
         pad_tif_mov = rescale(pad_tif_mov, rescale_fct, anti_aliasing=anti_alias, preserve_range = True)
         pad_tif_mov = pad_tif_mov.astype(np.uint16)
-      
+
       #Doing the image registration
       aligned_tif = sr.transform(pad_tif_mov)
       del pad_tif_mov
@@ -419,11 +419,11 @@ def get_aligned_images(args, source):
       del aligned_tif
       gc.collect()
 
-    print('Transformed channels done, image is of size', np.shape(aligned_images), 
+    print('Transformed channels done, image is of size', np.shape(aligned_images),
                                   getsizeof(np.array(aligned_images))/10**6, 'MB')
     del tif_mov
     gc.collect()
-    
+
     #To put the marker names in the metadata and also the scale/resolution
     marker_names_al = open('./aligned/marker_names_al.txt',"r")
     marker_al = marker_names_al.readlines()
@@ -525,8 +525,18 @@ def final_image(args,source):
   marker_final = marker_names_final.readlines()
   mdata = get_metadata('final_image', np.shape(final_image), marker_final, resolution)
 
-  with tifffile.TiffWriter('./final_image.ome.tif', bigtiff = True) as tif:
-    tif.write(np.array(final_image), description  = mdata)
+  final_image_np = np.array(final_image)
+
+  if args.output == 'tif':
+    with tifffile.TiffWriter('./final_image.ome.tif', bigtiff = True) as tif:
+      tif.write(final_image_np, description  = mdata)
+  elif args.output == 'czi':
+    from pylibCZIrw import czi as pyczi
+    with pyczi.create_czi('./final_image.czi', exist_ok=True) as czi:
+      channels, height, width = final_image_np.shape
+      for ch in range(channels):
+        array2d = final_image_np[ch, ...][..., np.newaxis]
+        czi.write(data=array2d)#, plane={"Z", ch})
 
   print('Final image saved!')
 
@@ -577,12 +587,12 @@ def pyramidal_final_image(args):
     data3[i,:,:] = rescale(data[i,:,:], scale, anti_aliasing=True, preserve_range = True)
   print('Level 3 image dimension', data3.shape)
 
-  #if you want to make it work for the small test set of images, 
+  #if you want to make it work for the small test set of images,
   #you need to change tileSize to 32 as the image is just above 500 pixels
   tileSize = 512
   comp = 'zlib' #zstd, lzma does not work
 
-  #Write a tiled, multi-resolution, pyramidal, OME-TIFF file using zlib compression. 
+  #Write a tiled, multi-resolution, pyramidal, OME-TIFF file using zlib compression.
   #Sub-resolution images are written to SubIFDs:
   with tifffile.TiffWriter('pyr_final_image.ome.tif', bigtiff=True) as tif:
     options = dict(tile=(tileSize, tileSize), description  = mdata, compression = comp)
