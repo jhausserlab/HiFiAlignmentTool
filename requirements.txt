@@ -1,0 +1,12 @@
+# Install using: python3 -m pip install [--user] -r requirements.txt
+numpy>=1.22.2
+tifffile>=2022.2.9
+aicspylibczi>=3.0.5
+scikit-image>=0.19.2
+pystackreg>=0.2.5
+pandas>=1.4.1
+
+# The pylibCZIrw library is not (yet) on PyPI and must be installed as a wheel
+# Install using: python3 -m pip install [--user] pylibCZIrw-*.whl
+
+# pylibCZIrw>=3.0.0

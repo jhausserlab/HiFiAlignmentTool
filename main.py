@@ -12,12 +12,12 @@ def dir_path(string):
 parser = argparse.ArgumentParser(description='Microscopy Image processing')
 
 parser.add_argument(
-  'source', 
-  type=dir_path, 
+  'source',
+  type=dir_path,
   help='input path, the folder of czi to reassemble')
 parser.add_argument(
-  'destination', 
-  type=dir_path, 
+  'destination',
+  type=dir_path,
   help='output path, the folder where to put the reassembled images')
 parser.add_argument(
   '-y',
@@ -28,17 +28,17 @@ parser.add_argument(
   help='generate image without asking any questions'
 )
 parser.add_argument(
-  '--reference', 
+  '--reference',
   type = str,
   default='DAPI',
   help ='The reference channel that will be used for registration, based on the csv file (defaut is DAPI)'
 )
 parser.add_argument(
-  '--resolution', 
+  '--resolution',
   type = float,
   default=0.325,
   help ='Resolution of the original image: what does 1 pixel represent in micrometers (default is 0.325)'
-) 
+)
 parser.add_argument(
   '--disable-reassemble',
   action='store_const',
@@ -61,11 +61,11 @@ parser.add_argument(
   help='downscale images if images too large for computer RAM'
 )
 parser.add_argument(
-  '--factor', 
+  '--factor',
   type = float,
   default=0.33,
   help ='Scale factor between 0. - 1. (only used if --downscale is set)'
-) 
+)
 parser.add_argument(
   '--nofinalimage',
   action='store_const',
@@ -98,6 +98,13 @@ parser.add_argument(
   const=True,
   default=False,
   help='If you use this argument, the code will save an additional final_image that is a tiled, multi-resolution OME-TIFF file'
+)
+choices = ['czi', 'tif']
+parser.add_argument(
+  '--output',
+  default='tif',
+  choices=choices,
+  help=f'Output file type (default is "tif", choices are "tif" or "czi")'
 )
 
 args = parser.parse_args()

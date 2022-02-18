@@ -20,6 +20,9 @@ def get_reassembled_czi(czi):
   print('info – czi channels: ', channels)
 
   for channel in range(channels):
+    # The following line throws an error on (x86_64) macOS Monterey (12.2.1)
+    # with Python 3.9.10 and aicspylibczi==3.0.5:  MemoryError: std::bad_alloc
+    # No error on (x86_64) Ubuntu 18.04.LTS with the same Python/aicspylibczi
     mosaic = czi.read_mosaic(C=channel, scale_factor=1)
     print('info – channel', channel, 'reassembled')
 
@@ -41,4 +44,3 @@ def get_image(source, file):
   reassembled_czi = get_reassembled_czi(czi)
   print('Shape of reassembled_czi: ', np.shape(reassembled_czi), 'of size', getsizeof(np.array(reassembled_czi))/10**6, 'MB')
   return reassembled_czi
-  

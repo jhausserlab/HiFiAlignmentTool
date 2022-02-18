@@ -17,18 +17,24 @@ From the **terminal**, access that folder using **cd** to arrive to that folder 
 
 If you have root access, to install the required librairies for the code, you can run in the terminal from that folder:
 
-```
-python3 installLib.py
+```bash
+python3 -m pip install -r requirements.txt
 ```
 
 else if you do not have root access (e.g from a server or multi-account computer), you can run:
 
-```
-python3 installLibUser.py
+```bash
+python3 -m pip install --user -r requirements.txt
 ```
 
-This installs all the librairies that you require for the process (via pip, which is built-in by default with python3). 
-After having done so, you can remove this script if desired.
+This installs all the libraries that you require for the process (via pip, which is built-in by default with python3).
+
+**Important**: If you need to output CZI files insted of OME-TIFF, you will also need to install the `pylibCZIrw` library.
+This library is not (yet) on [the Python package index (PyPI)](https://pypi.org/) and you will therefore have to install it manually as follows:
+
+```bash
+python3 -m pip install pylibCZIrw-*.whl
+```
 
 From the folder where you are launching the code, you will have:
 - a folder **czi**, where the czi files that you want to process will be stored (which will be the "source").
@@ -41,7 +47,7 @@ From the folder where you are launching the code, you will have:
 - **installLibUser.py** the script to install all librairies required for the code if you do not have root access.
 
 **Please** respect the CSV file structure with: the name of the CSV called channel_name.csv, the filenames as the rows and the channels as the columns.
-The structure given in the mock dataset is the correct one. 
+The structure given in the mock dataset is the correct one.
 **Please be sure that the order of the channels in the CSV file is the same as in the image** (e.g. in CZI channel1 is Cy3, channel2 Cy5 and channel3 Cy7 -> so in CSV file you have the first column as Cy3, second column as Cy5 and third column as Cy7). In the case you have a czi file for the background subtraction, it should **not** be included in the CSV file.
 
 **WARNING:** Do not put the special character **|** in any of the names in the CSV files (whether marker names, filenames or channel names). This **will** cause errors in the processing of the images if you want the fullname in the metadata.
@@ -75,7 +81,7 @@ main.py has also optional arguments:
 9. --background filename --> if you have a czi file that contains the channels with no markers except for the reference channel used for registration. You can put it in the czi folder and the code will remove the background for each respective channel (except for reference channel) in the final image output. If no argument provided, it will not do any background subtraction.
 10. --backgroundMult XX --> if you want to remove the background multiplied by a certain factor XX (1 by default).
 11. --fullname --> if you want the full name of the channels (e.g marker | channel | filename). By default it gives just the marker name.
-12. --pyramidal --> if you want to save a new final image that is compressed and pyramidal. 
+12. --pyramidal --> if you want to save a new final image that is compressed and pyramidal.
 
 
 if you want to know what are the arguments via the terminal, type:
@@ -122,7 +128,7 @@ It is important to note that the loading of the file paths are done in the order
 
 ## Test code
 
-When downloading the github folder, you have a mock image set with its respective csv file. For demonstration purposes the markers are named a letter in alphabetical order with respect to the reference channel. 
+When downloading the github folder, you have a mock image set with its respective csv file. For demonstration purposes the markers are named a letter in alphabetical order with respect to the reference channel.
 To ensure the code is running and to also try the different options, you can work with this small image set.
 First of all, run the following code
 ```
@@ -147,7 +153,7 @@ If you want to increase the background subtraction and you have already done the
 python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 -y --background background --backgroundMult 2 --disable-reassemble --disable-registration
 ```
 
-Finally, if you want to have a compressed tiled pyramidal OME-TIF you can add the argument --pyramidal. 
+Finally, if you want to have a compressed tiled pyramidal OME-TIF you can add the argument --pyramidal.
 ```
 python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 -y --pyramidal
 ```
@@ -157,14 +163,14 @@ python3 main.py ./czi ./reassembled --reference DAPI --resolution 0.325 -y --dis
 ```
 WARNING: If you want to try the pyramidal function with the test set you need to go into the script registration.py and modify line 582 tileSize = 512 to tileSize = 32. This is because the test image is too small for 512 pixels tilesize.
 
-N.B: The small set of image is taken from a region where the reassembling from czi was poorly done, thus there are slight shifts in the image. 
+N.B: The small set of image is taken from a region where the reassembling from czi was poorly done, thus there are slight shifts in the image.
 This is just to help you run the code and understand how the code works.
 
 ## F.A.Q:
 
 **Does your code work on all systems?**
 
-Yes, this code runs on Mac, Windows and Linux systems. 
+Yes, this code runs on Mac, Windows and Linux systems.
 
 **The code crashes during the step in the terminal:**
 ```
@@ -188,7 +194,7 @@ You likely have an older version of the library aicspylibczi (latest version is 
 ```
 **What does this mean?**
 
-You have an older version of the library tifffile (latest version is 2021.4.8). Previous version used the function tif.save to save tiffs but it has been deprecated and now tif.write is the function to use. Be sure to install the latest version of tifffile. Or else you can replace the parts of the code where there is tif.write by tif.save. WARNING: Do not do this for the function pyramidal_final_image as it is only in the latest version that you can do a pyramidal compressed tiff. 
+You have an older version of the library tifffile (latest version is 2021.4.8). Previous version used the function tif.save to save tiffs but it has been deprecated and now tif.write is the function to use. Be sure to install the latest version of tifffile. Or else you can replace the parts of the code where there is tif.write by tif.save. WARNING: Do not do this for the function pyramidal_final_image as it is only in the latest version that you can do a pyramidal compressed tiff.
 
 **Can I use Qupath to analyse further the final image?**
 
@@ -209,13 +215,13 @@ What it does is:
 
 For my use case, I used a tumor image: 13'500 x 14'000 x 49 channels of original size 18.7 GB.
 This file I cannot load directly into QuPath so it is a good use case to see if --pyramidal works.
-The created compressed tiled pyramidal image was 15 GB compared to 27GB if I had done uncompressed tiled pyramidal. 
+The created compressed tiled pyramidal image was 15 GB compared to 27GB if I had done uncompressed tiled pyramidal.
 This process is quite lengthy though on a 64 GB computer. It took 28 minutes to do the whole step for the original 18.7 GB image so if you are working with larger images, do not be surprised.
 The RAM used during this whole process was around 27GB and as the registration process required more RAM than that, I would say: if you can do the registration, you can also create the compressed file with the same computer/server. 
 
 **Can I do another type of image registration?**
 
-The image registration is done thanks to pystackreg library. In this code, RIGID_BODY (translation + rotation) is hard coded as it is the most consistent. However you can do simple translation, scaling or scaling + shear. 
+The image registration is done thanks to pystackreg library. In this code, RIGID_BODY (translation + rotation) is hard coded as it is the most consistent. However you can do simple translation, scaling or scaling + shear.
 If you want to change the registration process you need to access the script **registration.py** and modify in **line 250** and **line 363**: **sr = StackReg(StackReg.RIGID_BODY)** replace RIGID_BODY with: TRANSLATION, SCALED_ROTATION or AFFINE.
 See https://pystackreg.readthedocs.io/en/latest/ for more information on the registration process.
 
